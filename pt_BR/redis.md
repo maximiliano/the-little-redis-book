@@ -36,56 +36,57 @@ O código mais recente desse livre está disponível em:
 
 \clearpage
 
-## Introduction
+## Introdução
 
-Over the last couple years, the techniques and tools used for persisting and querying data have grown at an incredible pace. While it's safe to say that relational databases aren't going anywhere, we can also say that the ecosystem around data is never going to be the same.
+Através dos últimos anos, as técnicas e ferramentes usadas para persistencia e busca de dados tem crescido em ritmo incrível. Ao mesmo tempo que é seguro dizer que os banco de dados relacionais não vão a lugar algum, nós também podemos dizer que o ecossistema dos dados nunca será o mesmo.
 
-Of all the new tools and solutions, for me, Redis has been the most exciting. Why? First because it's unbelievably easy to learn. Hours is the right unit to use when talking about length of time it takes to get comfortable with Redis. Secondly, it solves a specific set of problems while at the same time being quite generic. What exactly does that mean? Redis doesn't try to be all things to all data. As you get to know Redis, it'll become increasingly evident what does and what does not belong in it. And when it does, as a developer, it's a great experience.
+De todas as ferramentas e soluções novas, para mim, Redis tem sido a mais excitante. Porque? Primeiramente porque é inacreditavelmente fácil de aprender. Pode-se falar em termos de horas, ao descrever a quantidade de tempo necessaria para ficar confortavel com Redis. Em segundo lugar, ele resolve um conjunto específico de problemas e ao mesmo consegue ser bastante genérico. O que isso significa exatamente? Redis não tenta ser a solução de todos os problemas para qualquer tipo de dado. Ao conhecer melhor o Redis, se torna mais e mais evidente que tipo de problemas ele pode resolver e os que ele não pode. E quando ele pode, como um desenvolver, é uma grande experiência.
 
-While you can build a complete system using Redis only, I think most people will find that it supplements their more generic data solution - whether that be a traditional relational database, a document-oriented system, or something else. It's the kind of solution you use to implement specific features. In that way, it's similar to an indexing engine. You wouldn't build your entire application on Lucene. But when you need good search, it's a much better experience - for both you and your users. Of course, the similarities between Redis and indexing engines end there.
+Embora você possa construir um sistema inteiro usando somente Redis, eu acho que a maioria das pessoas irá descobrir que ele é uma adição a sua solução genérica de dados - seja ela um banco de dados relacional, um sistema orientado a documente ou outra coisa. É o tipo de solução que você usar para implementar funcionalidades específicas. Dessa maneira, é semelhante a uma engine de indexing. Você não deveria ter que construir sua aplicação inteira em Lucene. Mas quando você precisa de uma boa busca, é uma experiência muito melhor - tanto para você como para seus usuários. Claro, as semelhanças entre Redis e engines de indexing acabam por aqui.
 
-The goal of this book is to build the foundation you'll need to master Redis. We'll focus on learning Redis' five data structures and look at various data modeling approaches. We'll also touch on some key administrative details and debugging techniques.
+O objetivo deste livro é construir a fundação que você precisa para dominar o Redis. Nós iremos focar em aprender os cinco tipos de estruturas de dados do Redis e olhar para as diversas maneiras modelagem de dados. Nós também iremos tocar em alguns detalhes chave da parte administrativa e técnicas de depuração.
 
-## Getting Started
+## Começando
 
-We all learn differently: some like to get their hands dirty, some like to watch videos, and some like to read. Nothing will help you understand Redis more than actually experiencing it. Redis is easy to install and comes with a simple shell that'll give us everything we need. Let's take a couple minutes and get it up and running on our machine.
+Todos aprendemos de maneiras diferentes: alguns gostam de botar a mão na massa, outros de assistir videos e alguns de ler. Nada irá ajudar a você entender Redis mais do que utiliza-lo. Redis é fácil de instalar e vem com um console simples que nos dará tudo que precisamos. Vamos gastar alguns minutos para deixa-lo pronto para rodar em nossa máquina.
 
-### On Windows
+### No Windows
 
-Redis itself doesn't officially support Windows, but there are options available. You wouldn't run these in production, but I've never experienced any limitations while doing development.
+O Redis em si não suporta o Windows oficialmente, mas existem algumas opções disponívels. Você não deveria roda-las em produção, mas eu nunca experimentei limitações enquanto no ambiente de desenvolvimento.
 
-A port by Microsoft Open Technologies, Inc. can be found at <https://github.com/MSOpenTech/redis>. As of this writing the solution is not ready for use in production systems.
+Um port feito por Microsoft Open Technologies, Inc. pode ser encontrado em <https://github.com/MSOpenTech/redis>. Quando este livro foi escrito a solução não estava pronta para ser usada em ambiente de produção.
 
 Another solution, which has been available for some time, can be found at <https://github.com/dmajkic/redis/downloads>. You can download the most up to date version (which should be at the top of the list). Extract the zip file and, based on your architecture, open either the `64bit` or `32bit` folder.
+Outra solução já disponível a algum tempo, pode ser encontrada em <https://github.com/dmajkic/redis/downloads>. Você pode baixar a versão mais recente (que deve estar no topo da lista). Extraia o arquivo zip e, dependendo da sua arquitetura, abra o a pasta `64bit` ou `32bit`.
 
-### On *nix and MacOSX
+### No *nix e MacOSX
 
-For *nix and and Mac users, building it from source is your best option. The instructions, along with the latest version number, are available at <http://redis.io/download>. At the time of this writing the latest version is 2.4.6; to install this version we would execute:
+Para usuários de *nix e Mac, construir do fonte é sua melhor opção. As instruções, juntamente com o número da versão mais recente, estão disponíveis em <http://redis.io/download>. No tempo que este livro foi escrito, a versão mais recente era 2.4.6; para instalar esta versão nós executariamos:
 
 	wget http://redis.googlecode.com/files/redis-2.4.6.tar.gz
 	tar xzf redis-2.4.6.tar.gz
 	cd redis-2.4.6
 	make
 
-(Alternatively, Redis is available via various package managers. For example, MacOSX users with Homebrew installed can simply type `brew install redis`.)
+Alternativamente, Redis está disponível via diversos gerenciadores de pacote. Por exemplo, usuários de MacOSX com Homebrew instalado pode simplesmente digitar `brew install redis`.)
 
-If you built it from source, the binary outputs have been placed in the `src` directory. Navigate to the `src` directory by executing `cd src`.
+Se você construir do fonte, as saídas binárias serão colocadas na pasta `src`. Acesse a pasta `src` executando o comando `cd src`.
 
-### Running and Connecting to Redis
+### Rodando e Conectando no Redis
 
-If everything worked, the Redis binaries should be available at your fingertips. Redis has a handful of executables. We'll focus on the Redis server and the Redis command line interface (a DOS-like client). Let's start the server. In Windows, double click `redis-server`. On *nix/MacOSX run `./redis-server`.
+Se tudo funcionou, os binários do Redis devem estar disponíveis nas pontas de seus dedos. Redis tem um monte de executáveis. Nós iremos focar no servidor do Redis e na interface em linha de comando (como um cliente DOS). Vamos iniciar o servidor. No Windows, dê um clique duplo em `redis-server`. No *unix/MacOSX rode o comando `./redis-server`.
 
-If you read the start up message you'll see a warning that the `redis.conf` file couldn't be found. Redis will instead use built-in defaults, which is fine for what we'll be doing.
+Na mensagem de inicialização você verá um aviso informando que o arquivo `redis.conf` não foi encontrado. Redis irá então usar as configurações padrão, isso basta para o que nós iremos fazer.
 
-Next start the Redis console by either double clicking `redis-cli` (Windows) or running `./redis-cli` (*nix/MacOSX). This will connect to the locally-running server on the default port (6379).
+Em seguinte inicie o console do Redis ou dando um clique duplo em `redis-cli` (no Windows) ou executando o comando `./redis-cli` (no *nix/MacOSX). Isso irá te conectar ao servidor local rodando na porta padrão (6379).
 
-You can test that everything is working by entering `info` into the command line interface. You'll hopefully see a bunch of key-value pairs which provide a great deal of insight into the server's status.
+Você pode testar se tudo está funcionando digitando `info` na interface de linha de comando. Você verá então uma porção de pares chave-valor que forcenem uma boa idéia sobre o status do servidor.
 
-If you are having problems with the above setup I suggest you seek help in the [official Redis support group](https://groups.google.com/forum/#!forum/redis-db).
+Se você está tendo problemas com o procedimento anterior eu sugiro que você busque ajuda no [grupo oficial de suporte do Redis](https://groups.google.com/forum/#!forum/redis-db).
 
-## Redis Drivers
+## Drivers do Redis
 
-As you'll soon learn, Redis' API is best described as an explicit set of functions. It has a very simple and procedural feel to it. This means that whether you are using the command line tool, or a driver for your favorite language, things are very similar. Therefore, you shouldn't have any problems following along if you prefer to work from a programming language. If you want, head over to the [client page](http://redis.io/clients) and download the appropriate driver.
+Como você em breve vai aprender, a API do Redis é melhor definida como um conjuto explícito de funções. Ela tem um aspécto simples e processual. Isto significa que tanto usando a ferramenta da linha de comando como em um driver para sua linguagem favorita, vai ser tudo muito parecido. Portanto, você não deve ter problemas problemas em acompanhar os passos seguintes se você preferir usar uma linguagem de programação. Se preferir, siga para a [página de clientes] e baixe o driver apropriado.
 
 \clearpage
 
