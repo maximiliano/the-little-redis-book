@@ -5,33 +5,33 @@
 \clearpage
 \changepage{}{}{}{0.5cm}{}{-2cm}{}{}{}
 
-## About This Book
+## Sobre Este Livro
 
-### License
+### Licença
 
-The Little Redis Book is licensed under the Attribution-NonCommercial 3.0 Unported license. You should not have paid for this book.
+The Little Redis Book é licenciado sob uma licença Attribution-NonCommercial 3.0 Unported. Você não deve pagar por este livro.
 
-You are free to copy, distribute, modify or display the book. However, I ask that you always attribute the book to me, Karl Seguin, and do not use it for commercial purposes.
+Você é livre para copiar, distribuir, modificar ou exibir o livro. Entretanto, eu peço que você sempre atribua este livre a mim, Karl Seguin, e não use-o para propósitos comerciais.
 
-You can see the *full text* of **the license at**:
+Você pode ver o *texto completo* da licença em**:
 
 <http://creativecommons.org/licenses/by-nc/3.0/legalcode>
 
-### About The Author
+### Sobre O Autor
 
-Karl Seguin is a developer with experience across various fields and technologies. He's an active contributor to Open-Source Software projects, a technical writer and an occasional speaker. He's written various articles, as well as a few tools, about Redis. Redis powers the ranking and statistics of his free service for casual game developers: [mogade.com](http://mogade.com/).
+Karl Seguin é um desenvolvedor com experiência em vários campos e tecnologias. Ele contribui em projetos de software Open-Source, é um escritor técnico e ocasionalmente um palestrante. Ele escreveu diversos artigos, como também algumas ferramentas, sobre Redis. Redis é usado no ranking e estatística de seu serviço gratuito para desenvolvedores casuais de jogos: [mogade.com](http://mogade.com/).
 
-Karl wrote [The Little MongoDB Book](http://openmymind.net/2011/3/28/The-Little-MongoDB-Book/), the free and popular book about MongoDB.
+Karl escreveu [The Little MongoDB Book](http://openmymind.net/2011/3/28/The-Little-MongoDB-Book/), o popular e gratuito livro sobre MongoDB.
 
-His blog can be found at <http://openmymind.net> and he tweets via [@karlseguin](http://twitter.com/karlseguin)
+Seu blog pode ser acessado em <http://openmymind.net> e seus tweets via [@karlseguin](http://twitter.com/karlseguin)
 
-### With Thanks To
+### Agradecimentos
 
-A special thanks to [Perry Neal](https://twitter.com/perryneal) for lending me his eyes, mind and passion. You provided me with invaluable help. Thank you.
+Um obrigado em especial para [Perry Neal](https://twitter.com/perryneal) por me emprestar seus olhos, mente e paixão. Você me forneceu uma ajuda sem preço.
 
-### Latest Version
+### Versão Mais Atual
 
-The latest source of this book is available at:
+O código mais recente desse livre está disponível em:
 <http://github.com/karlseguin/the-little-redis-book>
 
 \clearpage
