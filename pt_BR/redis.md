@@ -623,15 +623,15 @@ Como o arquivo é bem documentado, nós não vamos analisar cada ajuste.
 
 Além de configurar o Redis pelo arquivo `redis.conf`, podemos usar o comando `config set` para mudar valores individuais. Na verdade, nós já usamos o `config set` quando passamos a configuração `slowlog-log-slower-than` para 0.
 
-Também existe o comando `config get`, que exibe o valor de uma configuração. Este comando suporta a busca por padrões. Assim, se queremos exibis tudo relacionado a logs, podemos fazer:
+Também existe o comando `config get`, que exibe o valor de uma configuração. Este comando suporta a busca por padrões. Assim, se queremos exibir tudo relacionado a logs, podemos fazer:
 
    config get *log*
 
 ### Authentication
 
-O Redis pode ser configurado para exigir uma senha. Isto pode ser feito através da configuração `requirepass` (que pode ser informado tanto no `redis.conf` quando com o comando `config set`). Quando o `requirepass` possui um valor configurado (que é a senha que deve ser utilizada), os clientes vão precisar executar um comando `auth password`.
+O Redis pode ser configurado para exigir uma senha. Isto pode ser feito através da configuração `requirepass` (que pode ser informada tanto no `redis.conf` quando com o comando `config set`). Quando o `requirepass` possui um valor configurado (que é a senha que deve ser utilizada), os clientes vão precisar executar um comando `auth password`.
 
-Uma vez que o cliente está autenticado, ele pode executar qualquer comando em qualquer banco de dados. Isto inclui o `flushall`, que apaga todas as chaves de todos os bancos. Na configuração você pode renomear os comandos para obter um pouco de segurança por obfuscação:
+Uma vez que o cliente esteja autenticado, ele poderá executar qualquer comando em qualquer banco de dados. Isto inclui o `flushall`, que apaga todas as chaves de todos os bancos. Na configuração, você pode renomear os comandos para obter um pouco de segurança por obfuscação:
 
 	rename-command CONFIG 5ec4db169f9d4dddacbfb0c26ea7e5ef
 	rename-command FLUSHALL 1041285018a942a4922cbf76623b741e
@@ -640,13 +640,13 @@ Ou você pode desabilitar um comando setando o novo nome para uma string vazia.
 
 ### Limitações de Tamanho
 
-Enquanto você começa a usar o Redis, você pode se perguntar "quantas chaves eu posso guardar?" Você pode também pensar quantos campos um hash pode ter (especialmente quando você usa-os para organizar seus dados), ou quantos elementos as listas e sets podem ter. Por instância, o limite prático para todos estes é na casa das centenas de milhões.
+Enquanto você está começando a usar o Redis, você pode se perguntar "quantas chaves eu posso guardar?" Você pode também pensar quantos campos um hash pode ter (especialmente quando você usa-os para organizar seus dados), ou quantos elementos as listas e sets podem ter. Por instância, o limite prático para todos estes é na casa das centenas de milhões.
 
 ### Replicação
 
-O Redis suporta replicação, o que significa que enquanto você escreve para uma instância do Redis (o master, ou "mestre"), uma ou mais outras instâncias (os slaves, ou "escravos") são mantidas atualizadas pelo master. Para configurar um slave, você pode usar tanto a configuração `slaveof` quanto o comando `slaveof` (instâncias que rodam sem esta configuração são ou podem ser masters).
+O Redis suporta replicação, o que significa que enquanto você escreve em uma instância do Redis (o master, ou "mestre"), uma ou mais outras instâncias (os slaves, ou "escravos") são mantidas atualizadas pelo master. Para configurar um slave, você pode usar tanto a configuração `slaveof` quanto o comando `slaveof` (instâncias que rodam sem esta configuração são ou podem ser masters).
 
-A replicação ajuda a proteger seus dados copiando-os para servidores diferentes. A replicação também pode ser usada para melhorar o desempenho, já que as leituras podem ser feitas a partir dos slaves. Eles podem responder com dados levemente desatualizados, mas para a maioria das aplicações esta é uma troca que vale a pena.
+A replicação ajuda a proteger seus dados copiando-os para servidores diferentes. A replicação também pode ser usada para melhorar o desempenho, já que as leituras podem ser feitas a partir dos slaves. Eles podem responder com dados ligeiramente desatualizados, mas para a maioria das aplicações esta é uma troca que vale a pena.
 
 Infelizmente, a replicação do Redis não provê ainda failover automático. Se o master morrer, um slave precisa ser promovido manualmente. Ferramentas tradicionais de alta disponibilidade que usem monitoração de heartbeats e scripts para automatizar a troca são atualmente dores-de-cabeça necessárias se você quer atingir algum grau de alta disponibilidade com o Redis.
 
@@ -654,13 +654,13 @@ Infelizmente, a replicação do Redis não provê ainda failover automático. Se
 
 Fazer backup do Redis é uma simples questão de copiar o snapshot do Redis para onde quer que você queira (S3, FTP, ...). Por padrão, o Redis salva o snapshot em um arquivo chamado `dump.rdb`. Você pode simplesmente copiar este arquivo a qualquer momento com `scp`, `ftp` ou `cp` (ou qualquer outra coisa).
 
-Não é incomum desabilitar tanto a gravação de snapshots quando o arquivo append-only (aof) no master e deixar um slave tomar conta disso. Isso ajuda a reduzir a carga no maste e lhe permite setar parâmetros de salvamento mais agressivos no slave sem ferir a responsividade geral do sistema.
+Não é incomum desabilitar tanto a gravação de snapshots quanto o arquivo append-only (aof) no master e deixar um slave tomar conta disso. Isso ajuda a reduzir a carga no master e lhe permite setar parâmetros de gravação mais agressivos no slave, sem ferir a responsividade geral do sistema.
 
 ### Escalabilidade e Cluster Redis
 
-Replicação é a primeira ferramenta da qual um site em crescimento pode tirar vantagem. Alguns comandos são mais custosos que outros (`sort` por exemplo) e despachar a execução deles para um slave pode manter o sistema em geral responsivo às queries que chegam.
+Replicação é a primeira ferramenta da qual um site em crescimento pode tirar vantagem. Alguns comandos são mais custosos que outros (`sort` por exemplo) e despachar a execução deles para um slave pode manter o sistema respondendo bem às consultas que chegam.
 
-Além disso, escalar de verdade o Redis acaba chegando em distribuir suas chaves em várias instâncias do Redis (que podem rodar na mesma máquina - lembre-se: o Redis só possui uma thread). Até agora, isso é algo que é você quem vai precisar resolver (apesar que vários drivers de Redis provêem algoritmos de hash consistentes). Pensar seus dados em termos de distribuição horizontal é algo que não vamos cobrir neste livro. Também é algo que você provavelmente não vai ter que se preocupar por um bom tempo, mas é algo do qual você precisa estar ciente independente da solução que você use.
+Além disso, escalar de verdade o Redis acaba chegando em distribuir suas chaves em várias instâncias do Redis (que podem rodar na mesma máquina - lembre-se: o Redis só possui uma thread). Até agora, isso é algo que é você quem vai precisar resolver (apesar que vários drivers de Redis provêem algoritmos de hash consistentes). Pensar seus dados em termos de distribuição horizontal é algo que não vamos cobrir neste livro. Também é algo que você provavelmente não vai ter que se preocupar por um bom tempo, mas é algo do qual você precisa estar ciente independentemente da solução que você use.
 
 A boa notícia é que já existem esforços no sentido de um Cluster Redis. Isso não apenas vai oferecer escalabilidade horizontal – incluindo rebalanceamento – como também vai fornecer failover automático para alta disponibilidade.
 
@@ -668,7 +668,7 @@ Alta disponibilidade e escalabilidade são algo que pode ser atingido hoje, cont
 
 ### Neste Capítulo
 
-Dado o número de projetos e sites que já usam Redis, não pode haver nenhuma dúvida que o Redis está pronto para produção, e que já tem estado assim por um bom tempo. Entretanto, algumas das ferramentas - especialmente as de segurança e disponibilidade - ainda são jovens. O Cluster Redis, que esperamos ver em breve, deve ajudar a resolver alguns dos desafios de administração atuais.
+Dado o número de projetos e sites que já usam Redis, não resta dúvida que o Redis está pronto para produção, e que já tem estado assim por um bom tempo. Entretanto, algumas das ferramentas - especialmente as de segurança e disponibilidade - ainda são muito "verdes". O Cluster Redis, que esperamos ver em breve, deve ajudar a resolver alguns dos desafios de administração atuais.
 
 \clearpage
 
