@@ -484,7 +484,7 @@ O Redis permite que você marque uma chave para expiração. Você pode fornecer
 
 O primeiro comando vai apagar a chave (e os valores associados a ela) após 30 segundos. O segundo vai fazer o mesmo no dia 31 de dezembro de 2012 ao meio-dia.
 
-Isto faz do Redis um mecanismo de cache ideal. Você pode descobrir quanto tempo de vida um item possui através do comando `ttl`, e você pode remover a expiração de uma chave usando o comando `persist`:
+Isto faz do Redis um mecanismo de cache ideal. Você pode descobrir quanto tempo de vida um item possui através do comando `ttl`, e pode remover a expiração de uma chave usando o `persist`:
 
 	ttl pages:about
 	persist pages:about
@@ -507,14 +507,14 @@ A resposta é a informação da sua assinatura. Agora, na outra janela, publique
 
 Se você voltar para a primeira janela, você deve ter recebido a mensagem no canal `warnings`.
 
-Você pode assinar vários canais (`subscribe channel1 channel2 ...`), assinar um padrão de canais (`psubscribe warnings:*`) e usar os comandos `unsubscribe` e `punsubscribe` para parar de ouvir um ou mais canais, ou um padrão de canais.
+Você pode assinar vários canais (`subscribe channel1 channel2 ...`), assinar um padrão de canais (`psubscribe warnings:*`) e usar os comandos `unsubscribe` e `punsubscribe` para cancelar a assinatura de um ou mais canais, ou de um padrão de canais.
 
 Finalmente, note que o comando `publish` retornou o valor 1. Isto indica o número de clientes que receberam a mensagem.
 
 
 ### Monitor e Slow Log
 
-O comando `monitor` lhe permite ver o que o Redis anda fazendo. É uma grande ferramenta de depuração que lhe permite ver de que forma a aplicação está interagindo com o Redis. Em uma das suas duas janelas do `redis-cli` (se uma ainda está com assinaturas, você pode usar o comando `unsubscribe` ou simplesmente fechar a janela e abrir outra) digite o comando `monitor`. Em outra, execute qualquer tipo de comando (como `get` ou `set`). Você deve ver estes comandos, bem como seus parâmetros, na primeira janela.
+O comando `monitor` lhe permite saber o que o Redis anda fazendo. É uma grande ferramenta de depuração que lhe permite ver de que forma a aplicação está interagindo com o Redis. Em uma das suas duas janelas do `redis-cli` (se uma ainda está com assinaturas, você pode usar o comando `unsubscribe` ou simplesmente fechar a janela e abrir outra) digite o comando `monitor`. Em outra, execute qualquer tipo de comando (como `get` ou `set`). Você deve ver estes comandos, bem como seus parâmetros, na primeira janela.
 
 Evite rodar o `monitor` em produção - ele é mais uma ferramenta de desenvolvimento e depuração. Fora isso, não há muito o que falar dele. É apenas uma ferramenta muito útil.
 
@@ -529,13 +529,13 @@ A seguir, digite alguns comandos. Quando terminar, você pode exibir todos os lo
 
 Você também pode pegar o número de items no slow log digitando `slowlog len`.
 
-Para cada comando digitado você deve ver quatro parâmetros:
+Para cada comando digitado, você deve ver quatro parâmetros:
 
 * Um id auto-incrementado
 
 * Um timestamp Unix de quando o comando aconteceu
 
-* O tempo, em microssegundos, que o comando levou para rodar
+* O tempo que o comando levou para rodar (em microssegundos)
 
 * O comando e seus parâmetros
 
@@ -543,7 +543,7 @@ O slow log é guardado em memória, então não deve ser um problema habilitá-l
 
 ### Ordenação
 
-Um dos comandos mais poderosos do Redis é o `sort`. Ele permite que você ordene os valores de um list, set ou sorted set (sorted sets são ordenados por score, não pelos membros dentro do set). Na forma mais simples, ele nos permite fazer:
+Um dos comandos mais poderosos do Redis é o `sort`. Ele permite que você ordene os valores de uma lista, set ou sorted set (sorted sets são ordenados por score, não pelos membros dentro do set). Em sua forma mais simples, ele nos permite fazer:
 
 	rpush users:leto:guesses 5 9 10 2 4 10 19 2
 	sort users:leto:guesses
@@ -555,7 +555,7 @@ Isso vai retornar os valores ordenados do menor para o maior. Aqui vai um exempl
 
 O comando acima nos mostra como paginar as entradas ordenadas (com `limit`), como retornar os resultados em ordem decrescente (com `desc`) e como ordenar lexicograficamente em vez de numericamente (com `alpha`).
 
-O verdadeiro poder do `sort` é sua habilidade de ordenar baseado num objeto referenciado. Nós mostramos mais cedo como as listas, sets e sorted sets são usados muitas vezes para referenciar outros objetos no Redis. O comando `sort` pode seguir essas referências e ordenar pelo valor subjacente. Por exemplo, digamos que nós temos um sistema de acompanhamento de bugs que permite aos usuários observar determinados bugs. Nós podemos usar um set para acompanhar quais são os bugs observados:
+O verdadeiro poder do `sort` é sua habilidade de ordenar baseado num objeto referenciado. Mais cedo, nós mostramos como as listas, sets e sorted sets são usados muitas vezes para referenciar outros objetos no Redis. O comando `sort` pode seguir essas referências e ordenar pelo valor subjacente. Por exemplo, digamos que nós temos um sistema de acompanhamento de bugs que permite aos usuários observar determinados bugs. Nós podemos usar um set para acompanhar quais são os bugs observados:
 
 	sadd watch:leto 12339 1382 338 9338
 
@@ -570,9 +570,9 @@ Para ordenar os bugs por gravidade, da maior para a menor, você faria:
 
 	sort watch:leto by severity:* desc
 
-O Redis vai substituir o `*` do nosso padrão (identificado pelo `by`) com os valores na nossa lista/set/sorted set. Isso vai criar o nome da chave que o Redis vai consultar para pegar os valores que serão usados de fato na ordenação.
+O Redis vai substituir o `*` do nosso padrão (identificado pelo `by`) com os valores na nossa lista/set/sorted set. Isto vai criar o nome da chave que o Redis vai consultar para pegar os valores que serão usados de fato na ordenação.
 
-Apesar de você poder ter milhões de chaves dentro do Redis, eu acho que o método acima pode acabar um pouco bagunçado. Ainda bem que o `sort` também pode trabalhar com hashes e seus campos. Em vez de um monte de chaves de primeiro nível você pode tirar proveito dos hashes:
+Apesar de você poder ter milhões de chaves dentro do Redis, eu acho que o método acima pode acabar um pouco bagunçado. Ainda bem que o `sort` também pode trabalhar com hashes e seus campos. Em vez de um monte de chaves de primeiro nível, você pode tirar proveito dos hashes:
 
 	hset bug:12339 severity 3
 	hset bug:12339 priority 1
@@ -590,22 +590,22 @@ Apesar de você poder ter milhões de chaves dentro do Redis, eu acho que o mét
 	hset bug:9338 priority 2
 	hset bug:9338 details "{id: 9338, ....}"
 
-Assim, não apenas tudo fica mais organizado – e nós podemos ordenar por gravidade ou prioridade – como também podemos dizer qual campo o `sort` deve retornar:
+Assim, não apenas fica tudo mais organizado – e nós podemos ordenar por gravidade ou prioridade – como também podemos dizer qual campo o `sort` deve retornar:
 
 	sort watch:leto by bug:*->priority get bug:*->details
 
-Ocorre a mesma substituição de valor, mas o Redis também reconhece o operador `->` e utiliza-o para procurar o campo especificado no nosso hash. Nós também incluímos o parâmetro `get`, que faz a substituição e a busca de campos da mesma forma, para trazer os detalhes do bug.
+Ocorre a mesma substituição de valor, mas o Redis também reconhece o operador `->` e usa-o para procurar o campo especificado no nosso hash. Nós também incluímos o parâmetro `get`, que faz a substituição e a busca de campos da mesma forma, para trazer os detalhes do bug.
 
 O `sort` pode ser lento em sets grandes. A boa notícia é que a saída de um `sort` pode ser guardada:
 
 	sort watch:leto by bug:*->priority get bug:*->details store watch_by_priority:leto
 
-Combinar as capacidades de `store` do `sort` com os comandos de expiração que já vimos antes resulta num ótimo combo.
+Combinar a capacidade de guardar os resultados do `sort` com os comandos de expiração que já vimos antes resulta num ótimo combo.
 
 
 ### Neste Capítulo
 
-Este capítulo focou nos comandos que não são específicos às estruturas de dados. Como todo o resto, o uso deles depende da situação. É bastante comum construir uma aplicação ou recurso que não faz uso nenhum de expiração, publicação/assinatura ou ordenação; mas é bom saber que eles estão ali. Além disso, nós tocamos em apenas alguns comandos. Há mais, e, uma vez que você tenha digerido o material deste livro, vale a pena olhar a [lista completa](http://redis.io/commands).
+Este capítulo focou nos comandos que não são específicos às estruturas de dados. Como todo o resto, o uso deles depende da situação. É normal construir uma aplicação ou recurso que não usa expiração, publicação/assinatura nem ordenação; mas é bom saber que eles estão ali. Além disso, nós tocamos em apenas alguns comandos. Há mais, e, uma vez que você tenha digerido o material deste livro, vale a pena olhar a [lista completa](http://redis.io/commands).
 
 \clearpage
 
