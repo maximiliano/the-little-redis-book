@@ -307,75 +307,75 @@ That's a high level overview of Redis' five data structures. One of the neat thi
 
 \clearpage
 
-## Chapter 3 - Leveraging Data Structures
+## Chapter 3 - Explorando as Estruturas de Dados
 
-In the previous chapter we talked about the five data structures and gave some examples of what problems they might solve. Now it's time to look at a few more advanced, yet common, topics and design patterns.
+No capítulo anterior, falamos sobre as cinco estruturas de dados e demos alguns exemplos de quais tipos de problemas elas podem resolver. Agora é hora de ver alguns tópicos e padrões de projeto mais avançados, porém comuns.
 
-### Big O Notation
+### Notação do Grande-O
 
-Throughout this book we've made references to the Big O notation in the form of O(n) or O(1). Big O notation is used to explain how something behaves given a certain number of elements. In Redis, it's used to tell us how fast a command is based on the number of items we are dealing with.
+Através do livro nós fizemos referência à notação do Grande-O na forma O(n) ou O(1). A notação do Grande-O é usada para explicar como algo se comporta dado um certo número de elementos. No Redis, ela é usada para nos dizer o quão rápido é um comando, baseado no número de itens com os quais estamos lidando.
 
-Redis documentation tells us the Big O notation for each of its commands. It also tells us what the factors are that influence the performance. Let's look at some examples.
+A documentação do Redis nos fala a notação do Grande-O para cada um de seus comandos. Ela também nos diz quais os fatores que influenciam o desempenho. Vamos olhar alguns exemplos.
 
-The fastest anything can be is O(1) which is a constant. Whether we are dealing with 5 items or 5 million, you'll get the same performance. The `sismember` command, which tells us if a value belongs to a set, is O(1). `sismember` is a powerful command, and its performance characteristics are a big reason for that. A number of Redis commands are O(1).
+O mais rápido possível é O(1), que é uma constante. Tanto faz se estamos lidando com 5 ou 5 milhões de itens, vamos ter o mesmo desempenho. O comando `sismember`, que nos diz se um valor pertence a um conjunto, é O(1). `sismember` é um comando poderoso, e as características de desempenho dele são um motivo forte para isso. Vários comandos do Redis são O(1).
 
-Logarithmic, or O(log(N)), is the next fastest possibility because it needs to scan through smaller and smaller partitions. Using this type of divide and conquer approach, a very large number of items quickly gets broken down in a few iterations. `zadd` is a O(log(N)) command, where N is the number of elements already in the set.
+A complexidade logarítmica, ou O(log(N)), é a segunda possibilidade mais rápida, porque ela varre seções cada vez menores. Usando esta abordagem de "dividir e conquistar", um grande número de itens é rapidamente quebrado em poucas iterações. `zadd` é um comando O(log(N)), onde N é o número de elementos que já pertencem ao conjunto.
 
-Next we have linear commands, or O(N). Looking for a non-indexed column in a table is an O(N) operation. So is using the `ltrim` command. However, in the case of `ltrim`, N isn't the number of elements in the list, but rather the elements being removed. Using `ltrim` to remove 1 item from a list of millions will be faster than using `ltrim` to remove 10 items from a list of thousands. (Though they'll probably both be so fast that you wouldn't be able to time it.)
+Depois temos comandos lineares, ou O(N). Procurar por uma coluna não-indexada em uma tabela é uma operação O(N), assim como usar o comando `ltrim`. Entretanto, no caso do `ltrim`, N não é o número de elementos na lista, mas sim os elementos a serem removidos. Usar `ltrim` para remover 1 item de uma lista de milhões vai ser mais rápido que usar `ltrim` para remover 10 itens de uma lista de milhares (apesar que eles provavelmente vão ser tão rápidos que você nem conseguiria medir).
 
-`zremrangebyscore` which removes elements from a sorted set with a score between a minimum and a maximum value has a complexity of O(log(N)+M). This makes it a mix. By reading the documentation we see that N is the number of total elements in the set and M is the number of elements to be removed. In other words, the number of elements that'll get removed is probably going to be more significant, in terms of performance, than the total number of elements in the set.
+`zremrangebyscore`, que remove os elementos de um conjunto ordenado com um score entre certos valores mínimo e máximo, tem uma complexidade de O(log(N)+M). Isto faz dele um misto. Lendo a documentação, nós vemos que N é o número de elementos totais no conjunto e M é o número de elementos a serem removidos. Em outras palavras, o número de elementos que serão removidos provavelmente vai ser mais significativo, em termos de desempenho, que o número total de elementos no conjunto.
 
-The `sort` command, which we'll discuss in greater detail in the next chapter has a complexity of O(N+M*log(M)). From its performance characteristic, you can probably tell that this is one of Redis' most complex commands.
+O comando `sort`, que nós vamos discutir mais detalhadamente no próximo capítulo, tem uma complexidade de O(N+M*log(M)). Das características de desempenho dele, você provavelmente já pode inferir que este é um dos comandos mais complexos do Redis.
 
-There are a number of other complexities, the two remaining common ones are O(N^2) and O(C^N). The larger N is, the worse these perform relative to a smaller N. None of Redis' commands have this type of complexity.
+Há várias outras complexidades. As duas mais comuns que restam são O(N^2) e O(C^N). Quanto maior for N, pior o desempenho deles relativo a um N pequeno. Nenhum dos comandos do Redis tem esse tipo de complexidade.
 
-It's worth pointing out that the Big O notation deals with the worst case. When we say that something takes O(N), we might actually find it right away or it might be the last possible element.
+Vale lembrar que a notação do Grande-O trata do pior caso. Quando dizemos que algo leva O(N), na verdade podemos encontrar o item logo de cara ou ele pode ser o último elemento possível.
 
 
-### Pseudo Multi Key Queries
+### Consultas Pseudo Multi Chave
 
-A common situation you'll run into is wanting to query the same value by different keys. For example, you might want to get a user by email (for when they first log in) and also by id (after they've logged in). One horrible solution is to duplicate your user object into two string values:
+Uma situação comum com a qual você vai se deparar é querer consultar o mesmo valor em chaves diferentes. Por exemplo, você pode querer obter um usuário pelo email (quando ele loga pela primeira vez) e também por id (depois que ele logou). Uma solução terrível é duplicar seu objeto usuário como duas strings:
 
 	set users:leto@dune.gov "{id: 9001, email: 'leto@dune.gov', ...}"
 	set users:9001 "{id: 9001, email: 'leto@dune.gov', ...}"
 
-This is bad because it's a nightmare to manage and it takes twice the amount of memory.
+Isto é ruim porque é um pesadelo para gerenciar e porque ocupa o dobro da memória.
 
-It would be nice if Redis let you link one key to another, but it doesn't (and it probably never will). A major driver in Redis' development is to keep the code and API clean and simple. The internal implementation of linking keys (there's a lot we can do with keys that we haven't talked about yet) isn't worth it when you consider that Redis already provides a solution: hashes.
+Seria legal se o Redis deixasse você apontar uma chave para outra, mas ele não deixa (e provavelmente nunca vai deixar). Uma das principais diretrizes do desenvolvimento do Redis é manter o código e a API simples e claras. A implementação interna para ponteiros de chaves (há muitas operações que podemos fazer com chaves que não discutimos ainda) não vale a pena quando você considera que o Redis já tem uma solução: hashes.
 
-Using a hash, we can remove the need for duplication:
+Usando um hash, nós eliminamos a necessidade de duplicação:
 
 	set users:9001 "{id: 9001, email: leto@dune.gov, ...}"
 	hset users:lookup:email leto@dune.gov 9001
 
-What we are doing is using the field as a pseudo secondary index and referencing the single user object. To get a user by id, we issue a normal `get`:
+O que estamos fazendo é usar o campo como um pseudo-índice secundário e referenciando o objeto usuário único. Para obter um usuário por id, basta um `get` normal:
 
 	get users:9001
 
-To get a user by email, we issue an `hget` followed by a `get` (in Ruby):
+Para obter o mesmo usuário por email, executamos um `hget` seguido por um `get` (em Ruby):
 
 	id = redis.hget('users:lookup:email', 'leto@dune.gov')
 	user = redis.get("users:#{id}")
 
-This is something that you'll likely end up doing often. To me, this is where hashes really shine, but it isn't an obvious use-case until you see it.
+Isto é algo que você vai acabar fazendo bastante. Para mim, é aqui que os hashes realmente brilham, mas não é um caso de uso óbvio até que você o veja pela primeira vez.
 
-### References and Indexes
+### Referências e Índices
 
-We've seen a couple examples of having one value reference another. We saw it when we looked at our list example, and we saw it in the section above when using hashes to make querying a little easier. What this comes down to is essentially having to manually manage your indexes and references between values. Being honest, I think we can say that's a bit of a downer, especially when you consider having to manage/update/delete these references manually. There is no magic solution to solving this problem in Redis.
+Nós já vimos alguns exemplos de um valor apontando para outro. Vimos isso no nosso exemplo de listas, e vimos também na seção acima quando usamos hashes para facilitar um pouco as consultas. Essencialmente, isto se resume a ter que gerenciar manualmente os seus índices e referências entre valores. Sendo franco, eu acho que isso pode ser um pouco desestimulante, principalmente quando você pensa em ter que manter, atualizar e remover manualmente todas essas referências. Não há solução mágica para resolver esse problema no Redis.
 
-We already saw how sets are often used to implement this type of manual index:
+Nós já vimos como os conjuntos são usados muitas vezes para resolver este tipo de índice manual:
 
 	sadd friends:leto ghanima paul chani jessica
 
-Each member of this set is a reference to a Redis string value containing details on the actual user. What if `chani` changes her name, or deletes her account? Maybe it would make sense to also track the inverse relationships:
+Cada membro deste conjunto é uma referência a um valor string do Redis contendo detalhes do usuário atual. E se `chani` mudar de nome, ou excluir a conta dela? Talvez faça sentido também acompanhar a relação inversa:
 
 	sadd friends_of:chani leto paul
 
-Maintenance cost aside, if you are anything like me, you might cringe at the processing and memory cost of having these extra indexed values. In the next section we'll talk about ways to reduce the performance cost of having to do extra round trips (we briefly talked about it in the first chapter).
+Ignorando os custos de manutenção, se você se parecer só um pouquinho comigo, vai se contorcer só de pensar no custo de memória e processamento de ter esses valores extra indexados. Na próxima seção, vamos discutir formas de reduzir o custo de performance de ter que fazer estes passos extras (falamos disso rapidamente no primeiro capítulo).
 
-If you actually think about it though, relational databases have the same overhead. Indexes take memory, must be scanned or ideally seeked and then the corresponding records must be looked up. The overhead is neatly abstracted away (and they  do a lot of optimizations in terms of the processing to make it very efficient).
+Mas se você parar para pensar, bancos de dados relacionais tem o mesmo trabalho extra. Índices ocupam memória, precisam ser varridos (ou idealmente lidos direto a partir da posição correta) e depois os registros correspondentes precisam ser localizados. O trabalho extra é abstraído elegantemente (e eles fazem várias otimizações de processamento para que isso seja muito eficiente).
 
-Again, having to manually deal with references in Redis is unfortunate. But any initial concerns you have about the performance or memory implications of this should be tested. I think you'll find it a non-issue.
+Novamente, ter que lidar manualmente com referências no Redis é desagradável. Mas quaisquer preocupações iniciais que você tenha sobre o desempenho ou as implicações de memória devem ser testadas. Você vai descobrir que não há problema.
 
 ### Round Trips and Pipelining
 
