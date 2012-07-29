@@ -307,7 +307,7 @@ That's a high level overview of Redis' five data structures. One of the neat thi
 
 \clearpage
 
-## Chapter 3 - Explorando as Estruturas de Dados
+## Capítulo 3 - Explorando as Estruturas de Dados
 
 No capítulo anterior, falamos sobre as cinco estruturas de dados e demos alguns exemplos de quais tipos de problemas elas podem resolver. Agora é hora de ver alguns tópicos e padrões de projeto mais avançados, porém comuns.
 
@@ -332,7 +332,7 @@ Há várias outras complexidades. As duas mais comuns que restam são O(N^2) e O
 Vale lembrar que a notação do Grande-O trata do pior caso. Quando dizemos que algo leva O(N), na verdade podemos encontrar o item logo de cara ou ele pode ser o último elemento possível.
 
 
-### Consultas Pseudo Multi Chave
+### Consultas Pseudo-Multi-Chave
 
 Uma situação comum com a qual você vai se deparar é querer consultar o mesmo valor em chaves diferentes. Por exemplo, você pode querer obter um usuário pelo email (quando ele loga pela primeira vez) e também por id (depois que ele logou). Uma solução terrível é duplicar seu objeto usuário como duas strings:
 
@@ -377,25 +377,25 @@ Mas se você parar para pensar, bancos de dados relacionais tem o mesmo trabalho
 
 Novamente, ter que lidar manualmente com referências no Redis é desagradável. Mas quaisquer preocupações iniciais que você tenha sobre o desempenho ou as implicações de memória devem ser testadas. Você vai descobrir que não há problema.
 
-### Round Trips and Pipelining
+### Round Trips e Pipelines
 
-We already mentioned that making frequent trips to the server is a common pattern in Redis. Since it is something you'll do often, it's worth taking a closer look at what features we can leverage to get the most out of it.
+Nós já mencionamos que consultas frequentes ao servidor é um padrão comum no Redis. Já que é algo que você vai fazer sempre, é bom dar uma olhada em alguns dos recursos que podemos usar para aproveitar isso ao máximo.
 
-First, many commands either accept one or more set of parameters or have a sister-command which takes multiple parameters. We saw `mget` earlier, which takes multiple keys and returns the values:
+Primeiro, vários comandos aceitam um ou mais parâmetros, ou têm um comando irmão que aceita vários parâmetros. Nós vimos o `mget` mais cedo, que recebe múltiplas chaves e retorna os valores:
 
 	keys = redis.lrange('newusers', 0, 10)
 	redis.mget(*keys.map {|u| "users:#{u}"})
 
-Or the `sadd` command which adds 1 or more members to a set:
+Ou o comando `sadd`, que adiciona um ou mais membros a um conjunto:
 
 	sadd friends:vladimir piter
 	sadd friends:paul jessica leto "leto II" chani
 
-Redis also supports pipelining. Normally when a client sends a request to Redis it waits for the reply before sending the next request. With pipelining you can send a number of requests without waiting for their responses. This reduces the networking overhead and can result in significant performance gains.
+O Redis também suporta pipelines. Normalmente, quando um cliente envia uma requisição ao Redis, ele espera a resposta antes de enviar a próxima requisição. Com pipelines, você pode enviar qualquer número de requisições sem esperar pelas respostas. Isto reduz a comunicação de rede e pode resultar em ganhos significativos de desempenho.
 
-It's worth noting that Redis will use memory to queue up the commands, so it's a good idea to batch them. How large a batch you use will depend on what commands you are using, and more specifically, how large the parameters are. But, if you are issuing commands against ~50 character keys, you can probably batch them in thousands or tens of thousands.
+É importante frisar que o Redis vai usar a memória para enfileirar os comandos, então é uma boa ideia agrupá-los em lotes. O tamanho do lote vai depender dos comandos que você está usando e, mais especificamente, do tamanho dos parâmetros. Mas se você está executando comandos em chaves de ~50 caracteres, você provavelmente pode agrupá-los em milhares ou dezenas de milhares.
 
-Exactly how you execute commands within a pipeline will vary from driver to driver. In Ruby you pass a block to the `pipelined` method:
+Exatamente quais comandos você executa em um pipeline vai variar de driver para driver. Em Ruby, você passa um bloco para o método `pipelined`:
 
 	redis.pipelined do
 	  9001.times do
@@ -403,43 +403,43 @@ Exactly how you execute commands within a pipeline will vary from driver to driv
 	  end
 	end
 
-As you can probably guess, pipelining can really speed up a batch import!
+Como você já deve ter percebido, pipelines podem agilizar bastante uma importação em lotes!
 
-### Transactions
+### Transações
 
-Every Redis command is atomic, including the ones that do multiple things. Additionally, Redis has support for transactions when using multiple commands.
+Todos os comandos do Redis são atômico, inclusive os que realizam múltiplas tarefas. Adicionalmente, o Redis tem suporte a transações quando se usa múltiplos comandos.
 
-You might not know it, but Redis is actually single-threaded, which is how every command is guaranteed to be atomic. While one command is executing, no other command will run. (We'll briefly talk about scaling in a later chapter.) This is particularly useful when you consider that some commands do multiple things. For example:
+Você pode não saber, mas o Redis roda em apenas uma thread, que é como se pode garantir que todos os comandos são atômicos. Enquanto um comando está sendo executado, nenhum outro comando vai rodar (vamos falar daqui a pouco sobre escalabilidade, nos próximos capítulos). Isso é particularmente útil quando você considera que alguns comandos podem fazer várias coisas. Por exemplo:
 
-`incr` is essentially a `get` followed by a `set`
+`incr` é essencialmente um `get` seguido por um `set`
 
-`getset` sets a new value and returns the original
+`getset` define um novo valor e retorna o original
 
-`setnx` first checks if the key exists, and only sets the value if it does not
+`setnx` primeiro checa se a chave existe, e só define o valor caso não exista
 
-Although these commands are useful, you'll inevitably need to run multiple commands as an atomic group. You do so by first issuing the `multi` command, followed by all the commands you want to execute as part of the transaction, and finally executing `exec` to actually execute the commands or `discard` to throw away, and not execute the commands. What guarantee does Redis make about transactions?
+Apesar desses comandos serem úteis, você inevitavelmente vai precisar rodar vários comandos como um grupo atômico. Você faz isso rodando primeiro o comando `multi`, seguido por todos os comandos que você que executar como parte da transação, e finalmente rodando o `exec` para executar de fato os comandos ou `discard` para desprezá-los, e não executar os comandos. Que garantia o Redis dá sobre as transações?
 
-* The commands will be executed in order
+* Os comandos serão executados na ordem
 
-* The commands will be executed as a single atomic operation (without another client's command being executed halfway through)
+* Os comandos serão executados como uma operação atômica única (sem que outro comando cliente seja executado entre eles)
 
-* That either all or none of the commands in the transaction will be executed
+* Que serão executados todos ou nenhum dos comandos da transação
 
-You can, and should, test this in the command line interface. Also note that there's no reason why you can't combine pipelining and transactions.
+Você pode, e deveria, testar este comando na linha de comando. Note também que não há motivo pelo qual você não possa combinar pipelines e transações.
 
 	multi
 	hincrby groups:1percent balance -9000000000
 	hincrby groups:99percent balance 9000000000
 	exec
 
-Finally, Redis lets you specify a key (or keys) to watch and conditionally apply a transaction if the key(s) changed. This is used when you need to get values and execute code based on those values, all in a transaction. With the code above, we wouldn't be able to implement our own `incr` command since they are all executed together once `exec` is called. From code, we can't do:
+Por fim, o Redis deixa você especificar uma ou mais chaves para observar e aplicar condicionalmente uma transação quando as chaves mudarem. Isto é usado quando você precisa obter valores e executar código baseado nesses valores, tudo em uma transação. Com o código acima, nós não conseguiríamos implementar nosso próprio comando `incr`, já que eles seriam executados todos ao mesmo tempo quando o o `exec` for chamado. A partir do código, não podemos fazer:
 
 	redis.multi()
 	current = redis.get('powerlevel')
 	redis.set('powerlevel', current + 1)
 	redis.exec()
 
-That isn't how Redis transactions work. But, if we add a `watch` to `powerlevel`, we can do:
+Não é assim que as transações funcionam no Redis. Mas, se você adicionar um `watch` a `powerlevel`, poderá fazer:
 
 	redis.watch('powerlevel')
 	current = redis.get('powerlevel')
@@ -447,31 +447,32 @@ That isn't how Redis transactions work. But, if we add a `watch` to `powerlevel`
 	redis.set('powerlevel', current + 1)
 	redis.exec()
 
-If another client changes the value of `powerlevel` after we've called `watch` on it, our transaction will fail. If no client changes the value, the set will work. We can execute this code in a loop until it works.
+Se outro cliente mudar o valor de `powerlevel` após termos usado o `watch` nele, nossa transação vai falhar. Se nenhum cliente mudar o valor, o `set` vai funcionar. Nós podemos executar este código em um loop até ele dar certo.
 
-### Keys Anti-Pattern
+### Anti-padrões de Chaves
 
-In the next chapter we'll talk about commands that aren't specifically related to data structures. Some of these are administrative or debugging tools. But there's one I'd like to talk about in particular: the `keys` command. This command takes a pattern and finds all the matching keys. This command seems like it's well suited for a number of tasks, but it should never be used in production code. Why? Because it does a linear scan through all the keys looking for matches. Or, put simply, it's slow.
+No próximo capítulo, vamos falar de comandos que não estão relacionados a nenhuma estrutura de dados específica. Alguns destes são ferramentas administrativas e de depuração. Mas há um em particular do qual eu gostaria de falar: o comando `keys`. Este comando recebe um padrão e encontra todas as chaves que se encaixem nele. Este comando parece ser útil para várias tarefas, mas nunca deve ser usado em código de produção. Porque? Porque ele faz uma varredura linear por todas as chaves, vendo quais se encaixam. Ou, simplesmente, é lento.
 
-How do people try and use it? Say you are building a hosted bug tracking service. Each account will have an `id` and you might decide to store each bug into a string value with a key that looks like `bug:account_id:bug_id`. If you ever need to find all of an account's bugs (to display them, or maybe delete them if they delete their account), you might be tempted (as I was!) to use the `keys` command:
+Como as pessoas usam-no? Digamos que você está escrevendo um sistema de acompanhamento de bugs. Cada conta vai ter um `id` e você pode decidir guardar cada bug em uma string com uma chave do tipo `bug:account_id:bug_id`. Se você algum dia precisar encontrar todos os bugs de uma conta (para exibi-los, ou talvez removê-los se alguém cancelar uma conta), você pode ficar tentado (como eu fiquei!) a usar o comando `keys`:
 
 	keys bug:1233:*
 
-The better solution is to use a hash. Much like we can use hashes to provide a way to expose secondary indexes, so too can we use them to organize our data:
+A melhor solução é usar um hash. De forma bem parecida a como usamos hashes para prover uma forma de expor índices secundários, também podemos usá-los para organizar nossos dados:
 
 	hset bugs:1233 1 "{id:1, account: 1233, subject: '...'}"
 	hset bugs:1233 2 "{id:2, account: 1233, subject: '...'}"
 
-To get all the bug ids for an account we simply call `hkeys bugs:1233`. To delete a specific bug we can do `hdel bugs:1233 2` and to delete an account we can delete the key via `del bugs:1233`.
+Para obter todos os ids de bugs de uma conta, nós simplesmente rodamos `hkeys bugs:1233`. Para excluir um bug específico nós podemos fazer `hdel bugs:1233 2`, e para excluir uma conta nós podemos apagar a chave usando `del bugs:1233`.
 
 
-### In This Chapter
+### Neste Capítulo
 
-This chapter, combined with the previous one, has hopefully given you some insight on how to use Redis to power real features. There are a number of other patterns you can use to build all types of things, but the real key is to understand the fundamental data structures and to get a sense for how they can be used to achieve things beyond your initial perspective.
+Esperamos que este capítulo, junto com o anterior, tenha lhe dado uma boa visão sobre como usar o Redis para implementar recursos reais. Há vários outros padrões que você pode usar para construir todo tipo de coisa, mas o segredo é entender as estruturas de dados fundamentais e como elas podem ser usadas para atingir coisas além da sua perspectiva inicial.
 
 \clearpage
 
-## Chapter 4 - Além das Estruturas de Dados
+
+## Capítulo 4 - Além das Estruturas de Dados
 
 Enquanto as cinco estruturas de dados formam o alicerce do Redis, há outros comandos que não são específicos de nenhuma estrutura de dados. Já vimos alguns destes: `info`, `select`, `flushdb`, `multi`, `exec`, `discard`, `watch` e `keys`. Este capítulo vai tratar de alguns outros comandos importantes.
 
