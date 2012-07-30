@@ -177,25 +177,25 @@ The important takeaways from this chapter are:
 
 \clearpage
 
-## Chapter 2 - The Data Structures
+## Capítulo 2 - As Estruturas de Dados
 
-It's time to look at Redis' five data structures. We'll explain what each data structure is, what methods are available and what type of feature/data you'd use it for.
+É hora de ver as 5 estruturas de dados do Redis. Vamos explicar o que cada uma faz, quais métodos estão disponíveis e em quais tipos de recursos/dados você pode usá-las.
 
-The only Redis constructs we've seen so far are commands, keys and values. So far, nothing about data structures has been concrete. When we used the `set` command, how did Redis know what data structure to use? It turns out that every command is specific to a data structure. For example when you use `set` you are storing the value in a string data structure. When you use `hset` you are storing it in a hash. Given the small size of Redis' vocabulary, it's quite manageable.
+As únicas construções do Redis que vimos até agora foram os comandos, chaves e valores. Até então, nada concreto sobre estruturas de dados. Quando usamos o comando `set`, como o Redis sabia que estrutura de dados usar? Acontece que cada comando é específico para uma estrutura de dados. Por exemplo, quando você usa o `set`, você está guardando o valor numa estrutura do tipo string. Quando você usa o `hset`, você está guardando o mesmo valor num hash. Dado o pequeno tamanho do vocabulário do Redis, isso é bem gerenciável.
 
-**[Redis' website](http://redis.io/commands) has great reference documentation. There's no point in repeating the work they've already done. We'll only cover the most important commands needed to understand the purpose of a data structure.**
+**[O site do Redis](http://redis.io/commands) tem uma ótima documentação de referência. Não há porque repetir o trabalho que eles já fizeram. Vamos cobrir apenas os comandos mais importantes para entender o propósito de uma estrutura de dados.**
 
-There's nothing more important than having fun and trying things out. You can always erase all the values in your database by entering `flushdb`, so don't be shy and try doing crazy things!
+Não há nada mais importante que se divertir e fazer testes. Você sempre pode apagar todos os valores de um banco de dados com o `flushdb`, então não se intimide e tente fazer coisas loucas!
 
 ### Strings
 
-Strings are the most basic data structures available in Redis. When you think of a key-value pair, you are thinking of strings. Don't get mixed up by the name, as always, your value can be anything. I prefer to call them "scalars", but maybe that's just me.
+Strings são a estrutura de dados mais básica do Redis. Quando você pensa num par chave-valor, você está pensando em strings. Não se deixe confundir pelo nome; como sempre, seu valor pode ser qualquer coisa. Eu prefiro chamá-los de "escalares", mas talvez seja só eu.
 
-We already saw a common use-case for strings, storing instances of objects by key. This is something that you'll make heavy use of:
+Nós já vimos um caso de uso comum para strings: guardar instâncias de objetos por chave. Isto é algo que você pode fazer uso pesado:
 
 	set users:leto "{name: leto, planet: dune, likes: [spice]}"
 
-Additionally, Redis lets you do some common operations. For example `strlen <key>` can be used to get the length of a key's value; `getrange <key> <start> <end>` returns the specified range of a value; `append <key> <value>` appends the value to the existing value (or creates it if it doesn't exist already). Go ahead and try those out. This is what I get:
+O Redis também lhe permite fazer algumas operações adicionais. Por exemplo, `strlen <chave>` pode ser usado para obter o comprimento do valor de uma chave; `getrange <key> <start> <end>` retorna o range especificado de valores; `append <key> <value>` adiciona um valor ao final de outro (ou cria um, se já não existir). Vá em frente e tente-os. Isso é o que eu obtenho:
 
 	> strlen users:leto
 	(integer) 42
@@ -206,9 +206,9 @@ Additionally, Redis lets you do some common operations. For example `strlen <key
 	> append users:leto " OVER 9000!!"
 	(integer) 54
 
-Now, you might be thinking, that's great, but it doesn't make sense. You can't meaningfully pull a range out of JSON or append a value. You are right, the lesson here is that some of the commands, especially with the string data structure, only make sense given specific type of data.
+Agora – você deve estar pensando – isso é ótimo, mas não faz sentido. Você não pode adicionar uma string ou obter um range a partir de um JSON e isso funcionar. Você está certo - a lição aqui é que apenas alguns dos comandos, especialmente os que lidam com strings, só fazem sentido com alguns tipos específicos de dados.
 
-Earlier we learnt that Redis doesn't care about your values. Most of the time that's true. However, a few string commands are specific to some types or structure of values. As a vague example, I could see the above `append` and `getrange` commands being useful in some custom space-efficient serialization. As a more concrete example I give you the `incr`, `incrby`, `decr` and `decrby` commands. These increment or decrement the value of a string:
+Mais cedo, aprendemos que o Redis não liga para os seus valores. Isso quase sempre é verdade. Entretanto, alguns comandos de strings são específicos a alguns tipos ou estruturas de valores. As a vague example, I could see the above `append` and `getrange` commands being useful in some custom space-efficient serialization. As a more concrete example I give you the `incr`, `incrby`, `decr` and `decrby` commands. These increment or decrement the value of a string:
 
 	> incr stats:page:about
 	(integer) 1
