@@ -149,31 +149,32 @@ Redis adicionou suporte a memória virtual. No entanto, este recurso foi visto c
 
 (Para informação, os 5.5MB de arquivos com a Obra completa de Shakespeare podem ser compactados para quase 2MB. Redis não faz auto-compressão mas, como ele trata valores como bytes, não há razão para que você não possa trocar tempo de processamento por memória compactando/descompactando o dado você mesmo.)
 
-### Putting It Together
+### Unindo tudo
 
-We've touched on a number of high level topics. The last thing I want to do before diving into Redis is bring some of those topics together. Specifically, query limitations, data structures and Redis' way to store data in memory.
+Nós tivemos contato com um número de tópicos de alto nível. A última coisa que gostaria de fazer antes de mergulhar no Redis é trazer alguns dos tópicos juntos. Especificamente, limtações de consulta, estruturas de dados e a maneira que Redis guarda os dados em memória.
 
-When you add those three things together you end up with something wonderful: speed. Some people think "Of course Redis is fast, everything's in memory." But that's only part of it. The real reason Redis shines versus other solutions is its specialized data structures.
+Quando você une estas três coisas termina com algo maravilhoso: velocidade. Algumas pessoas imaginam "Claro que o Redis é rápido, está tudo em memória." Mas é apenas parte dele. A real razão para que o Redis brilhe sobre outras soluções são suas estruturas de dados especializadas.
 
-How fast? It depends on a lot of things - which commands you are using, the type of data, and so on. But Redis' performance tends to be measured in tens of thousands, or hundreds of thousands of operations **per second**. You can run `redis-benchmark` (which is in the same folder as the `redis-server` and `redis-cli`) to test it out yourself.
+Quão rápido? Depende de várias coisas - quais comandos você está utilizando, o tipo de dado, e por aí. Mas a performance do Redis tende a ser medida em dezenas de milhares, ou centenas de milhares de operações **por segundo**. Você pode executar o `redis-benchmark` (que está no mesmo diretório do `redis-server` e do `redis-cli`) para testar você mesmo.
 
-I once changed code which used a traditional model to using Redis. A load test I wrote took over 5 minutes to finish using the relational model. It took about 150ms to complete in Redis. You won't always get that sort of massive gain, but it hopefully gives you an idea of what we are talking about.
 
-It's important to understand this aspect of Redis because it impacts how you interact with it. Developers with an SQL background often work at minimizing the number of round trips they make to the database. That's good advice for any system, including Redis. However, given that we are dealing with simpler data structures, we'll sometimes need to hit the Redis server multiple times to achieve our goal. Such data access patterns can feel unnatural at first, but in reality it tends to be an insignificant cost compared to the raw performance we gain.
+Certa vez eu alterei um código que usava em um modelo tradicional para usar com o Redis. Um teste de carga que escrevi durou 5 minutos para finalizar usando o modelo relacional. Durou cerca de 150ms para finalizar no Redis. Nem sempre você tem este ganho massivo de performance, mas espero que dê uma idéia a respeito do que estamos falando.
 
-### In This Chapter
+É importante entender este aspecto do Redis porque ele impacta em como você interage com ele. Desenvolvedores com uma experiência em SQL frequentemente trabalham em minimizar o número de ida e voltas que fazem ao banco de dados. É um bom conselho para qualquer sistema, incluindo o Redis. No entando, já que estamos lidando com estruturas de dados simples, algumas vezes precisaremos ir no servidor do Redis multiplas vezes para atingir nosso objetivo. Tais padrões de acesso a dados podem parecer não naturais a primeira vista, mas na realidade ele tende a ser um custo insignificante comparado a toda a performance que ganhamos.
 
-Although we barely got to play with Redis, we did cover a wide range of topics. Don't worry if something isn't crystal clear - like querying. In the next chapter we'll go hands-on and any questions you have will hopefully answer themselves.
+### Neste capítulo
 
-The important takeaways from this chapter are:
+Ainda que mal brincamos com o Redis, nós cobrimos uma vasta gama de tópicos. Não se preocupe se algo não parece claro - como consultas. No próximo capítulo nós iremos colocar a mão na massa e qualquer dúvida que você tiver esperamos que seja exclarecida.
 
-* Keys are strings which identify pieces of data (values)
+Os pontos importantes deste capítulo são:
 
-* Values are arbitrary byte arrays that Redis doesn't care about
+* Chaves são strings que identificam partes de dados (valores)
 
-* Redis exposes (and is implemented as) five specialized data structures
+* Valores são arbitrariamente matriz de bytes que o Redis não se importa
 
-* Combined, the above make Redis fast and easy to use, but not suitable for every scenario
+* Redis expõe (e é implementado como) cinco estruturas de dados especializadas
+
+* Combinados, eles fazem o Redis rápido e fácil de usar, mas não adequado para todos os casos
 
 \clearpage
 
