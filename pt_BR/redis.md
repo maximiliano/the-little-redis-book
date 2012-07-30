@@ -127,13 +127,13 @@ Está é a anatomia básica de um comando do Redis. Primeiro nós temos o atual 
 
 Siga em frente e brinque com outras combinações. Chaves e valores são conceitos fundamentais, e os comandos `get` e `set` são a maneira mais simples de brincar com eles. Crie mais usuários, tente diferentes tipos de chaves, tente valores diferentes.
 
-### Querying
+### Consultando
 
-As we move forward, two things will become clear. As far as Redis is concerned, keys are everything and values are nothing. Or, put another way, Redis doesn't allow you to query an object's values. Given the above, we can't find the user(s) which live on planet `dune`.
+A medida que andamos, duas coisas se tornarão claras. No que diz respeito ao Redis, chaves são tudo e valores não são nada. Ou, de uma outra forma, o Redis não permite que você busque valores de um objeto. Face ao exposto, não podemos encontrar os usuários que vivem no planeta `dune`.
 
-For many, this is will cause some concern. We've lived in a world where data querying is so flexible and powerful that Redis' approach seems primitive and unpragmatic. Don't let it unsettle you too much. Remember, Redis isn't a one-size-fits-all solution. There'll be things that just don't belong in there (because of the querying limitations). Also, consider that in some cases you'll find new ways to model your data.
+Para muitos, isto pode causar alguma preocupação. Vivemos em um mundo onde consulta de dados é tão flexível e poderosa que a maneira do Redis parece primitiva e não pragmática. Não deixe que isto te perturbe muito. Lembre-se, Redis não é uma solução única-que-resolve-tudo. Haverá coisas que simplesmente não se encaixam alí (devido a limitação das consultas). Além disso, considere que em alguns casos você irá encontrar novas formas de modelar seus dados.
 
-We'll look at more concrete examples as we move on, but it's important that we understand this basic reality of Redis. It helps us understand why values can be anything - Redis never needs to read or understand them. Also, it helps us get our minds thinking about modeling in this new world.
+Iremos analisar exemplos mais concretos a medida que avançamos, mas é importante entendermos que esta é a realidade básica do Redis. Ela nos ajudará a entender porque valores podem ser qualquer coisa - o Redis nunca precisa ler ou entendê-los. Além disso, ajuda nossa mente a pensar a respeito de modelagem neste novo mundo.
 
 ### Memory and Persistence
 
