@@ -137,7 +137,7 @@ Iremos analisar exemplos mais concretos a medida que avançamos, mas é importan
 
 ### Memória e Persistência
 
-Mencionamos anteriormente que Redis é uma armazenagem persistente em memória. Em relação a persistência, por padrão, o Redis escreve uma versão do banco de dados no disco baseado em quantas chaves foram alteradas. Você configura isto para que após X números de chaves mudem, então salve o banco de dados a cada Y segundos. Por padrão, o Redis irá salvar o banco de dados a cada 60 segundos se 1000 ou mais chaves foram alteradas *all the way to* 15 minutos se 9 ou menos chaves foram alteradas.
+Mencionamos anteriormente que Redis é uma armazenagem persistente em memória. Em relação a persistência, por padrão, o Redis escreve uma versão do banco de dados no disco baseado em quantas chaves foram alteradas. Você configura isto para que após X números de chaves mudem, então salve o banco de dados a cada Y segundos. Por padrão, o Redis irá salvar o banco de dados a cada 60 segundos se 1000 ou mais chaves foram alteradas e a cada 15 minutos se 9 ou menos chaves foram alteradas.
 
 Alternativamente (ou adicionalmente ao instantâneo), Redis pode rodar em modo append. Toda vez que uma chabe mudar, um arquivo somente adição é atualizado no disco. Em alguns casos é aceitável perder 60 segundos de dados, em troca de performance, caso haja alguma falha de hardware ou software. Em alguns casos é inaceitável. Redis dá a você a opção. No capítulo 5 veremos uma terceira opção, que é o descarregamento de persistência para um escravo.
 
