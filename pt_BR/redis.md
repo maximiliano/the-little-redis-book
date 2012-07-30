@@ -89,65 +89,65 @@ Como você vai aprender em breve, a API do Redis é melhor definida como um conj
 
 \clearpage
 
-## Chapter 1 - The Basics
+## Capítulo 1 - O Básico
 
-O que faz o Redis especial? Que tipos de problemas ele resolve? What should developers watch out for when using it? Before we can answer any of these questions, we need to understand what Redis is.
+O que faz o Redis especial? Que tipos de problemas ele resolve? Em que os desenvolvedores precisam prestão atenção ao utilizar o Redis? Antes de responder qualquer destas perguntas, precisamos entender o que é o Redis.
 
-Redis is often described as an in-memory persistent key-value store. I don't think that's an accurate description. Redis does hold all the data in memory (more on this in a bit), and it does write that out to disk for persistence, but it's much more than a simple key-value store. It's important to step beyond this misconception otherwise your perspective of Redis and the problems it solves will be too narrow.
+Redis é frequentemente descrito como um armazenamento persistente de chave-valor em memória. Eu não acho que seja uma descrição precisa. Redis guarda todos os dados em memória (mais sobre isso daqui a pouco), e escreve em disco para manter persistência, mas é muito mais do que um simples armazenamento de chave-valor. É importante dar um passo além desta conceito equivocado caso contrário sua perspectiva sobre o Redis e os problemas que ele resolve sera estreita.
 
-The reality is that Redis exposes five different data structures, only one of which is a typical key-value structure. Understanding these five data structures, how they work, what methods they expose and what you can model with them is the key to understanding Redis. First though, let's wrap our heads around what it means to expose data structures.
+A realidade é que o Redis expões cinco diferentes estruturas de dados, onde apenas uma delas é tipicamente chave-valor. Entender essas cinco estruturas de dados, como elas funcionam, que métodos elas expõem e o que você pode modelar com elas é a chave para entender o Redis. Primero, porém, vamos envolver nossas mentes em torno do que significa expor estruturas de dados.
 
-If we were to apply this data structure concept to the relational world, we could say that databases expose a single data structure - tables. Tables are both complex and flexible. There isn't much you can't model, store or manipulate with tables. However, their generic nature isn't without drawbacks. Specifically, not everything is as simple, or as fast, as it ought to be. What if, rather than having a one-size-fits-all structure, we used more specialized structures? There might be some things we can't do (or at least, can't do very well), but surely we'd gain in simplicity and speed?
+Se fôssemos aplicar este conceito de estruturas de dados ao mundo relacional, poderíamos dizer que bancos de dados expõem uma única estrutura de dados - tabelas. Tabelas são complexas e flexíveis. Não há muito o que voce não possa modelar, guardar ou manipular com elas. No entando, sua natureza genérica não é livre de inconvenientes. Especificamente, nem tudo é tão simples, ou tão rápido, como deveria ser. E se, ao invés de termos uma estrutura única-que-resolve-tudo, nós utilizássemos estruturas mais especializadas? Poderia haver algumas coisas que não conseguiríamos fazer (ou pelo menos, não conseguiríamos fazer tão bem), mas certamente ganharíamos em simplicidade e velocidade?
 
-Using specific data structures for specific problems? Isn't that how we code? You don't use a hashtable for every piece of data, nor do you use a scalar variable. To me, that defines Redis' approach. If you are dealing with scalars, lists, hashes, or sets, why not store them as scalars, lists, hashes and sets? Why should checking for the existence of a value be any more complex than calling `exists(key)` or slower than O(1) (constant time lookup which won't slow down regardless of how many items there are)?
+Usando estruturas de dados para problemas específicos? Não é assim que nós codificamos? Você não usa uma tabela hash para cada parte de um dado, nem usa uma variável escalar. Para mim, isto é o que define a abordagem do Redis. Se você está lidando com escalares, listas, hashes, ou conjuntos, por que não armazená-los como escalares, listas, hashes e conjuntos? Por que checar a existência de um valor pode ser mais complexo do que apenas chamar `exists(key)` ou mais lento do que O(1) (tempo constante de busca que não vai demorar mais independente da quantidade de ítems)?
 
 ## The Building Blocks
 
-### Databases
+### Bancos de Dados
 
-Redis has the same basic concept of a database that you are already familiar with. A database contains a set of data. The typical use-case for a database is to group all of an application's data together and to keep it separate from another application's.
+Redis possui o mesmo conceito básico de um banco de dados que você já seja familiar. Um banco de dados contém um conjuto de dados. O caso de uso típico de um banco de dados é agrupar todos os dados de uma aplicação e mantê-los separados dos dados de outra aplicação.
 
-In Redis, databases are simply identified by a number with the default database being number `0`. If you want to change to a different database you can do so via the `select` command. In the command line interface, type `select 1`. Redis should reply with an `OK` message and your prompt should change to something like `redis 127.0.0.1:6379[1]>`. If you want to switch back to the default database, just enter `select 0` in the command line interface..
+No Redis, bancos de dados são simplesmente identificados por um número sendo o padrão o número `0`. Se você quiser mudar para um banco de dados diferente você pode fazê-lo com o comando `select`. Na interface de linha de comando, digite `select 1`. Redis deve responder com uma mensagem `OK` e seu prompt deve mudar para algo como `redis 127.0.0.1:6379[1]>`. Se você quiser voltar para o banco de dados padrão, apenas digite `select 0` na interface de linha de comando.
 
-### Commands, Keys and Values
+### Comandos, chaves e valores
 
-While Redis is more than just a key-value store, at its core, every one of Redis' five data structures has at least a key and a value. It's imperative that we understand keys and values before moving on to other available pieces of information.
+Enquanto Redis é mais do que apenas guardar chave-valor, no seu centro, cada uma de suas cinco estruturas de dados possuem pelo menos uma chave e um valor. É necessário entendermos chaves e valores antes de continuar para outras peças disponíveis de informação.
 
-Keys are how you identify pieces of data. We'll be dealing with keys a lot, but for now, it's good enough to know that a key might look like `users:leto`. One could reasonably expect such a key to contain information about a user named `leto`. The colon doesn't have any special meaning, as far as Redis is concerned, but using a separator is a common approach people use to organize their keys.
+Chaves são como você identifica parte de um dado. Iremos tratar muito com chaves, mas por enquanto, é suficiente saber que uma chave pode parecer como `users:leto`. Pode-se esperar tal chave para conter informações a respeito do usuário chamado `leto`. Os dois pontos não tem significado especial, tanto que o Redis venha a se preocupar, mas usar um separador é uma maneira comum para que as pessoas organizem suas chaves.
 
-Values represent the actual data associated with the key. They can be anything. Sometimes you'll store strings, sometimes integers, sometimes you'll store serialized objects (in JSON, XML or some other format). For the most part, Redis treats values as a byte array and doesn't care what they are. Note that different drivers handle serialization differently (some leave it up to you) so in this book we'll only talk about string, integer and JSON.
+Valores representam o dado atual associado com a chave. Podem ser qualquer coisa. Algumas vezes você irá guardar strings, outras inteiros, outras irá guardar objetos serializados (em JSON, XML ou algum outro formato). Para a maioria, Redis trata valores como uma matriz de bytes e não se importa com o que eles são. Note que diferentes drivers lidam com serialização diferentemente (alguns deixam isso para você) então neste livro iremos apenas falar sobre strings, inteiros e JSON.
 
-Let's get our hands a little dirty. Enter the following command:
+Vamos sujar um pouco as mãos. Digite o seguinte comando:
 
 	set users:leto "{name: leto, planet: dune, likes: [spice]}"
 
-This is the basic anatomy of a Redis command. First we have the actual command, in this case `set`. Next we have its parameters. The `set` command takes two parameters: the key we are setting and the value we are setting it to. Many, but not all, commands take a key (and when they do, it's often the first parameter). Can you guess how to retrieve this value? Hopefully you said (but don't worry if you weren't sure!):
+Está é a anatomia básica de um comando do Redis. Primeiro nós temos o atual comando, neste caso o `set`. Depois temos seus parâmetros. O comando `set` receve dois argumentos: a chave que estamos setando e o valor que atribuimos a ela. Muitos, mas não todos, comandos recebem uma chave (e quando recebem, muitas vezes é o primeiro argumento). Você consegue adivinhar como obter este valor? Espero que você consiga (mas não se preocupe se não estiver certo):
 
 	get users:leto
 
-Go ahead and play with some other combinations. Keys and values are fundamental concepts, and the `get` and `set` commands are the simplest way to play with them. Create more users, try different types of keys, try different values.
+Siga em frente e brinque com outras combinações. Chaves e valores são conceitos fundamentais, e os comandos `get` e `set` são a maneira mais simples de brincar com eles. Crie mais usuários, tente diferentes tipos de chaves, tente valores diferentes.
 
-### Querying
+### Consultando
 
-As we move forward, two things will become clear. As far as Redis is concerned, keys are everything and values are nothing. Or, put another way, Redis doesn't allow you to query an object's values. Given the above, we can't find the user(s) which live on planet `dune`.
+A medida que andamos, duas coisas se tornarão claras. No que diz respeito ao Redis, chaves são tudo e valores não são nada. Ou, de uma outra forma, o Redis não permite que você busque valores de um objeto. Face ao exposto, não podemos encontrar os usuários que vivem no planeta `dune`.
 
-For many, this is will cause some concern. We've lived in a world where data querying is so flexible and powerful that Redis' approach seems primitive and unpragmatic. Don't let it unsettle you too much. Remember, Redis isn't a one-size-fits-all solution. There'll be things that just don't belong in there (because of the querying limitations). Also, consider that in some cases you'll find new ways to model your data.
+Para muitos, isto pode causar alguma preocupação. Vivemos em um mundo onde consulta de dados é tão flexível e poderosa que a maneira do Redis parece primitiva e não pragmática. Não deixe que isto te perturbe muito. Lembre-se, Redis não é uma solução única-que-resolve-tudo. Haverá coisas que simplesmente não se encaixam alí (devido a limitação das consultas). Além disso, considere que em alguns casos você irá encontrar novas formas de modelar seus dados.
 
-We'll look at more concrete examples as we move on, but it's important that we understand this basic reality of Redis. It helps us understand why values can be anything - Redis never needs to read or understand them. Also, it helps us get our minds thinking about modeling in this new world.
+Iremos analisar exemplos mais concretos a medida que avançamos, mas é importante entendermos que esta é a realidade básica do Redis. Ela nos ajudará a entender porque valores podem ser qualquer coisa - o Redis nunca precisa ler ou entendê-los. Além disso, ajuda nossa mente a pensar a respeito de modelagem neste novo mundo.
 
-### Memory and Persistence
+### Memória e Persistência
 
-We mentioned before that Redis is an in-memory persistent store. With respect to persistence, by default, Redis snapshots the database to disk based on how many keys have changed. You configure it so that if X number of keys change, then save the database every Y seconds. By default, Redis will save the database every 60 seconds if 1000 or more keys have changed all the way to 15 minutes if 9 or less keys has changed.
+Mencionamos anteriormente que Redis é uma armazenagem persistente em memória. Em relação a persistência, por padrão, o Redis escreve uma versão do banco de dados no disco baseado em quantas chaves foram alteradas. Você configura isto para que após X números de chaves mudem, então salve o banco de dados a cada Y segundos. Por padrão, o Redis irá salvar o banco de dados a cada 60 segundos se 1000 ou mais chaves foram alteradas *all the way to* 15 minutos se 9 ou menos chaves foram alteradas.
 
-Alternatively (or in addition to snapshotting), Redis can run in append mode. Any time a key changes, an append-only file is updated on disk. In some cases it's acceptable to lose 60 seconds worth of data, in exchange for performance, should there be some hardware or software failure. In some cases such a loss is not acceptable. Redis gives you the option. In chapter 5 we'll see a third option, which is offloading persistence to a slave.
+Alternativamente (ou adicionalmente ao instantâneo), Redis pode rodar em modo append. Toda vez que uma chabe mudar, um arquivo somente adição é atualizado no disco. Em alguns casos é aceitável perder 60 segundos de dados, em troca de performance, caso haja alguma falha de hardware ou software. Em alguns casos é inaceitável. Redis dá a você a opção. No capítulo 5 veremos uma terceira opção, que é o descarregamento de persistência para um escravo.
 
-With respect to memory, Redis keeps all your data in memory. The obvious implication of this is the cost of running Redis: RAM is still the most expensive part of server hardware.
+Em relação a memória, Redis deixa todos os seus dados na memória. A implicação óbvia isto é o custo de rodar o Redis: RAM é a parte mais cara do hardware do servidor.
 
-I do feel that some developers have lost touch with how little space data can take. The Complete Works of William Shakespeare takes roughly 5.5MB of storage. As for scaling, other solutions tend to be IO- or CPU-bound. Which limitation (RAM or IO) will require you to scale out to more machines really depends on the type of data and how you are storing and querying it. Unless you're storing large multimedia files in Redis, the in-memory aspect is probably a non-issue. For apps where it is an issue you'll likely be trading being IO-bound for being memory bound.
+Eu sinto que alguns desenvolvedores perderam a noção de quão pouco espaço os dados podem ocupar. A obra completa de William Shakespeare ocupa grosseiramente 5.5MB de armazenamento. Quanto a escalabilidade, outras soluções tendem a ser limitadas a IO ou CPU. Qual limitaçõo (RAM ou IO) será necessária para você escalar para mais máquinas realmente vai depender do tipo de dado e como você está armazenando e consultando. A menos que você esteja guardando grandes arquivos multimídias no Redis, o aspecto em memória provavelmente não é um problema. Para aplicações onde são, você provavelmente optará por ser limitado a IO do que a memória.
 
-Redis did add support for virtual memory. However, this feature has been seen as a failure (by Redis' own developers) and its use has been deprecated.
+Redis adicionou suporte a memória virtual. No entanto, este recurso foi visto como falha (pelos próprios desenvolvedores do Redis) e seu uso é ultrapassado.
 
-(On a side note, that 5.5MB file of Shakespeare's complete works can be compressed down to roughly 2MB. Redis doesn't do auto-compression but, since it treats values as bytes, there's no reason you can't trade processing time for RAM by compressing/decompressing the data yourself.)
+(Para informação, os 5.5MB de arquivos com a Obra completa de Shakespeare podem ser compactados para quase 2MB. Redis não faz auto-compressão mas, como ele trata valores como bytes, não há razão para que você não possa trocar tempo de processamento por memória compactando/descompactando o dado você mesmo.)
 
 ### Putting It Together
 
