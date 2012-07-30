@@ -103,29 +103,29 @@ Usando estruturas de dados para problemas específicos? Não é assim que nós c
 
 ## The Building Blocks
 
-### Databases
+### Bancos de Dados
 
-Redis has the same basic concept of a database that you are already familiar with. A database contains a set of data. The typical use-case for a database is to group all of an application's data together and to keep it separate from another application's.
+Redis possui o mesmo conceito básico de um banco de dados que você já seja familiar. Um banco de dados contém um conjuto de dados. O caso de uso típico de um banco de dados é agrupar todos os dados de uma aplicação e mantê-los separados dos dados de outra aplicação.
 
-In Redis, databases are simply identified by a number with the default database being number `0`. If you want to change to a different database you can do so via the `select` command. In the command line interface, type `select 1`. Redis should reply with an `OK` message and your prompt should change to something like `redis 127.0.0.1:6379[1]>`. If you want to switch back to the default database, just enter `select 0` in the command line interface..
+No Redis, bancos de dados são simplesmente identificados por um número sendo o padrão o número `0`. Se você quiser mudar para um banco de dados diferente você pode fazê-lo com o comando `select`. Na interface de linha de comando, digite `select 1`. Redis deve responder com uma mensagem `OK` e seu prompt deve mudar para algo como `redis 127.0.0.1:6379[1]>`. Se você quiser voltar para o banco de dados padrão, apenas digite `select 0` na interface de linha de comando.
 
-### Commands, Keys and Values
+### Comandos, chaves e valores
 
-While Redis is more than just a key-value store, at its core, every one of Redis' five data structures has at least a key and a value. It's imperative that we understand keys and values before moving on to other available pieces of information.
+Enquanto Redis é mais do que apenas guardar chave-valor, no seu centro, cada uma de suas cinco estruturas de dados possuem pelo menos uma chave e um valor. É necessário entendermos chaves e valores antes de continuar para outras peças disponíveis de informação.
 
-Keys are how you identify pieces of data. We'll be dealing with keys a lot, but for now, it's good enough to know that a key might look like `users:leto`. One could reasonably expect such a key to contain information about a user named `leto`. The colon doesn't have any special meaning, as far as Redis is concerned, but using a separator is a common approach people use to organize their keys.
+Chaves são como você identifica parte de um dado. Iremos tratar muito com chaves, mas por enquanto, é suficiente saber que uma chave pode parecer como `users:leto`. Pode-se esperar tal chave para conter informações a respeito do usuário chamado `leto`. Os dois pontos não tem significado especial, tanto que o Redis venha a se preocupar, mas usar um separador é uma maneira comum para que as pessoas organizem suas chaves.
 
-Values represent the actual data associated with the key. They can be anything. Sometimes you'll store strings, sometimes integers, sometimes you'll store serialized objects (in JSON, XML or some other format). For the most part, Redis treats values as a byte array and doesn't care what they are. Note that different drivers handle serialization differently (some leave it up to you) so in this book we'll only talk about string, integer and JSON.
+Valores representam o dado atual associado com a chave. Podem ser qualquer coisa. Algumas vezes você irá guardar strings, outras inteiros, outras irá guardar objetos serializados (em JSON, XML ou algum outro formato). Para a maioria, Redis trata valores como uma matriz de bytes e não se importa com o que eles são. Note que diferentes drivers lidam com serialização diferentemente (alguns deixam isso para você) então neste livro iremos apenas falar sobre strings, inteiros e JSON.
 
-Let's get our hands a little dirty. Enter the following command:
+Vamos sujar um pouco as mãos. Digite o seguinte comando:
 
 	set users:leto "{name: leto, planet: dune, likes: [spice]}"
 
-This is the basic anatomy of a Redis command. First we have the actual command, in this case `set`. Next we have its parameters. The `set` command takes two parameters: the key we are setting and the value we are setting it to. Many, but not all, commands take a key (and when they do, it's often the first parameter). Can you guess how to retrieve this value? Hopefully you said (but don't worry if you weren't sure!):
+Está é a anatomia básica de um comando do Redis. Primeiro nós temos o atual comando, neste caso o `set`. Depois temos seus parâmetros. O comando `set` receve dois argumentos: a chave que estamos setando e o valor que atribuimos a ela. Muitos, mas não todos, comandos recebem uma chave (e quando recebem, muitas vezes é o primeiro argumento). Você consegue adivinhar como obter este valor? Espero que você consiga (mas não se preocupe se não estiver certo):
 
 	get users:leto
 
-Go ahead and play with some other combinations. Keys and values are fundamental concepts, and the `get` and `set` commands are the simplest way to play with them. Create more users, try different types of keys, try different values.
+Siga em frente e brinque com outras combinações. Chaves e valores são conceitos fundamentais, e os comandos `get` e `set` são a maneira mais simples de brincar com eles. Crie mais usuários, tente diferentes tipos de chaves, tente valores diferentes.
 
 ### Querying
 
