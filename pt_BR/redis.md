@@ -89,7 +89,7 @@ Como você vai aprender em breve, a API do Redis é melhor definida como um conj
 
 \clearpage
 
-## Chapter 1 - The Basics
+## Capítulo 1 - O Básico
 
 O que faz o Redis especial? Que tipos de problemas ele resolve? What should developers watch out for when using it? Before we can answer any of these questions, we need to understand what Redis is.
 
