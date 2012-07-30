@@ -189,7 +189,7 @@ Não há nada mais importante que se divertir e fazer testes. Você sempre pode 
 
 ### Strings
 
-Strings são a estrutura de dados mais básica do Redis. Quando você pensa num par chave-valor, você está pensando em strings. Não se deixe confundir pelo nome; como sempre, seu valor pode ser qualquer coisa. Eu prefiro chamá-los de "escalares", mas talvez seja só eu.
+Strings são a estrutura de dados mais básica do Redis. Quando você pensa num par chave-valor, você está pensando em strings. Não se deixe confundir pelo nome: como sempre, seu valor pode ser qualquer coisa. Eu prefiro chamá-los de "escalares", mas talvez seja só eu.
 
 Nós já vimos um caso de uso comum para strings: guardar instâncias de objetos por chave. Isto é algo que você pode fazer uso pesado:
 
@@ -206,9 +206,9 @@ O Redis também lhe permite fazer algumas operações adicionais. Por exemplo, `
 	> append users:leto " OVER 9000!!"
 	(integer) 54
 
-Agora – você deve estar pensando – isso é ótimo, mas não faz sentido. Você não pode adicionar uma string ou obter um range a partir de um JSON e isso funcionar. Você está certo - a lição aqui é que apenas alguns dos comandos, especialmente os que lidam com strings, só fazem sentido com alguns tipos específicos de dados.
+Você deve estar pensando: isso é ótimo, mas não faz sentido. Você não pode adicionar uma string ou obter um range a partir de um JSON e isso funcionar. Você está certo - a lição aqui é que apenas alguns dos comandos, especialmente os que lidam com strings, só fazem sentido com alguns tipos específicos de dados.
 
-Mais cedo, aprendemos que o Redis não liga para os seus valores. Isso quase sempre é verdade. Entretanto, alguns comandos de strings são específicos a alguns tipos ou estruturas de valores. As a vague example, I could see the above `append` and `getrange` commands being useful in some custom space-efficient serialization. As a more concrete example I give you the `incr`, `incrby`, `decr` and `decrby` commands. These increment or decrement the value of a string:
+Mais cedo, aprendemos que o Redis não liga para os seus valores. Isso quase sempre é verdade. Entretanto, alguns comandos de strings são específicos a alguns tipos ou estruturas de valores. Como um exemplo vago, eu poderia ver os comandos `append` e `getrange` acima sendo úteis em alguma serialização customizada com uso de espaço eficiente. Estes aqui incrementam ou decrementam o valor de uma string:
 
 	> incr stats:page:about
 	(integer) 1
@@ -220,20 +220,20 @@ Mais cedo, aprendemos que o Redis não liga para os seus valores. Isso quase sem
 	> incrby ratings:video:12333 3
 	(integer) 8
 
-As you can imagine, Redis strings are great for analytics. Try incrementing `users:leto` (a non-integer value) and see what happens (you should get an error).
+Como você deve imaginar, strings do Redis são ótimas para analytics. Tente incrementar `users:leto` (um valor não-inteiro) e veja o que acontece (você deve receber um erro).
 
-A more advanced example is the `setbit` and `getbit` commands. There's a [wonderful post](http://blog.getspool.com/2011/11/29/fast-easy-realtime-metrics-using-redis-bitmaps/) on how Spool uses these two commands to efficiently answer the question "how many unique visitors did we have today". For 128 million users a laptop generates the answer in less than 50ms and takes only 16MB of memory.
+Um exemplo mais avançado são os comandos `setbit` e `getbit`. Há um [artigo excelente](http://blog.getspool.com/2011/11/29/fast-easy-realtime-metrics-using-redis-bitmaps/) sobre como a Spool usa esses dois comandos para responder eficientemente à questão "quantos visitantes únicos tivemos hoje". Para 128 milhões de usuários, um laptop gera a resposta em menos de 50ms e usa apenas 16MB de memória.
 
-It isn't important that you understand how bitmaps work, or how Spool uses them, but rather to understand that Redis strings are more powerful than they initially seem. Still, the most common cases are the ones we gave above: storing objects (complex or not) and counters. Also, since getting a value by key is so fast, strings are often used to cache data.
+Não importa que você entenda como os bitmaps funcionam ou como a Spool os utiliza, mas sim entender como as strings do Redis são mais poderosas do que parecem. Mesmo assim, os casos mais comuns são os que vimos acima: guardar objetos (complexos ou não) e contadores. E, como obter um valor por chave é tão rápido, strings são muito usadas para fazer cache de dados.
 
 ### Hashes
 
-Hashes are a good example of why calling Redis a key-value store isn't quite accurate. You see, in a lot of ways, hashes are like strings. The important difference is that they provide an extra level of indirection: a field. Therefore, the hash equivalents of `set` and `get` are:
+Hashes são um bom exemplo de porque não é muito preciso chamar o Redis de um sistema chave-valor. Veja, de várias formas, hashes são como strings. A diferença importante é que eles fornecem um nível extra de indireção: um campo. Assim, os comandos correspondentes a `set` e `get` em um hash são:
 
 	hset users:goku powerlevel 9000
 	hget users:goku powerlevel
 
-We can also set multiple fields at once, get multiple fields at once, get all fields and values, list all the fields or delete a specific field:
+Também podemos definir ou obter vários campos ao mesmo tempo, obter todos os campos e valores, listar todos os campos ou excluir um campo especificado:
 
 	hmset users:goku race saiyan age 737
 	hmget users:goku race powerlevel
@@ -241,69 +241,69 @@ We can also set multiple fields at once, get multiple fields at once, get all fi
 	hkeys users:goku
 	hdel users:goku age
 
-As you can see, hashes give us a bit more control over plain strings. Rather than storing a user as a single serialized value, we could use a hash to get a more accurate representation. The benefit would be the ability to pull and update/delete specific pieces of data, without having to get or write the entire value.
+Como você pode notar, hashes nos dão um pouco mais de controle que strings normais. Ao invés de guardar um usuário como um valor único serializado, poderíamos usar um hash para obter uma representação mais precisa. O benefício seria ter a habilidade de puxar ou atualizar/excluir partes específicas dos dados sem ter que ler ou escrever o valor inteiro.
 
-Looking at hashes from the perspective of a well-defined object, such as a user, is key to understanding how they work. And it's true that, for performance reasons, more granular control might be useful. However, in the next chapter we'll look at how hashes can be used to organize your data and make querying more practical. In my opinion, this is where hashes really shine.
+Ver os hashes pela perspectiva de um objeto bem definido, como um usuário, é a chave para entender como eles funcionam. E é verdade que, por razões de performance, um controle mais granular pode ser útil. Todavia, no próximo capítulo vamos ver como os hashes podem ser usados para organizar seus dados e facilitar as consultas. Na minha opinião, é nisso que os hashes se destacam de verdade.
 
-### Lists
+### Listas
 
-Lists let you store and manipulate an array of values for a given key. You can add values to the list, get the first or last value and manipulate values at a given index. Lists maintain their order and have efficient index-based operations. We could have a `newusers` list which tracks the newest registered users to our site:
+Listas deixam você guardar e manipular um vetor de valores para uma determinada chave. Você pode adicionar valores à lista, pegar o primeiro ou o último valor e manupular valores em uma determinada posição. As listas mantêm a ordem inicial e tem operações baseadas em índices muito eficientes. Nós poderíamos ter uma lista `newusers` para acompanhar quais os usuários que se registraram por último em nosso site:
 
 	lpush newusers goku
 	ltrim newusers 0 50
 
-First we push a new user at the front of the list, then we trim it so that it only contains the last 50 users. This is a common pattern. `ltrim` is an O(N) operation, where N is the number of values we are removing. In this case, where we always trim after a single insert, it'll actually have a constant performance of O(1) (because N will always be equal to 1).
+Primeiro nós adicionamos um novo usuário ao início da lista, depois cortamos a lista de forma que ela contenha apenas os 50 últimos usuários. Este é um padrão comum. `ltrim` é uma operação O(N), onde N é o número de valores que estamos removendo. Neste caso, quando reduzimos a lista sempre após uma inserção, o `ltrim` terá na verdade um desempenho O(1) (porque N sempre será igual a 1).
 
-This is also the first time that we are seeing a value in one key referencing a value in another. If we wanted to get the details of the last 10 users, we'd do the following combination:
+Esta também é a primeira vez que estamos vendo um valor em uma chave referenciando um valor em outra. Se quiséssemos obter os detalhes dos últimos 10 usuários, faríamos a seguinte combinação:
 
 	keys = redis.lrange('newusers', 0, 10)
 	redis.mget(*keys.map {|u| "users:#{u}"})
 
-The above is a bit of Ruby which shows the type of multiple roundtrips we talked about before.
+O código acima é um exemplo em Ruby que nos mostra o tipo de consultas múltiplas das quais já falamos.
 
-Of course, lists aren't only good for storing references to other keys. The values can be anything. You could use lists to store logs or track the path a user is taking through a site. If you were building a game, you might use it to track a queued user actions.
+É claro, listas não são boas apenas para guardar referências para outras chaves. Os valores podem ser qualquer coisa. Você poderia usar listas para guardar logs ou seguir o caminho que um usuário está fazendo pelo site. Se você estivesse escrevendo um jogo, poderia usá-las para guardar a fila de ações do jogador.
 
-### Sets
+### Conjuntos (Sets)
 
-Set are used to store unique values and provide a number of set-based operations, like unions. Sets aren't ordered but they provide efficient value-based operations. A friend's list is the classic example of using a set:
+Conjuntos servem para guardar valores únicos, e fornecem uma série de operações baseadas em conjuntos, como a união. Conjuntos não possuem ordem, mas fornecem operações baseadas valor muito eficientes. O exemplo clássico do uso de conjuntos é uma lista de amigos:
 
 	sadd friends:leto ghanima paul chani jessica
 	sadd friends:duncan paul jessica alia
 
-Regardless of how many friends a user has, we can efficiently tell (O(1)) whether userX is a friend of userY or not:
+Independentemente de quantos amigos um usuário possua, nós podemos dizer eficientemente (O(1)) se o usuário X é ou não amigo do usuário Y.
 
 	sismember friends:leto jessica
 	sismember friends:leto vladimir
 
-Furthermore we can see what two or more people share the same friends:
+Além disso nós podemos ver se duas ou mais pessoas possuem amigos em comum:
 
 	sinter friends:leto friends:duncan
 
-and even store the result at a new key:
+E até guardar o resultado em uma nova chave:
 
 	sinterstore friends:leto_duncan friends:leto friends:duncan
 
-Sets are great for tagging or tracking any other properties of a value for which duplicates don't make any sense (or where we want to apply set operations such as intersections and unions).
+Conjuntos são ótimos para etiquetar ou acompanhar outras propriedades de um valor para o qual não faz sentido haver duplicatas (ou quando queremos aplicar operações de conjuntos como interseção e união).
 
-### Sorted Sets
+### Conjuntos Ordenados (Sorted Sets)
 
-The last and most powerful data structure are sorted sets. If hashes are like strings but with fields, then sorted sets are like sets but with a score. The score provides sorting and ranking capabilities. If we wanted a ranked list of friends, we might do:
+A última e mais poderosa estrutura de dados é o conjunto ordenado. Se hashes são como strings com campos, então conjuntos ordenados são como conjuntos com pontuação. O score fornece as capacidades de ordenação e ranking. Se quiséssemos uma lista rankeada de amigos, poderíamos fazer:
 
 	zadd friends:duncan 70 ghanima 95 paul 95 chani 75 jessica 1 vladimir
 
-Want to find out how many friends `duncan` has with a score of 90 or over?
+Quer descobrir quantos amigos `duncan` tem com um score de 90 ou mais?
 
 	zcount friends:duncan 90 100
 
-How about figuring out `chani`'s rank?
+Que tal descobrir o rank de `chani`?
 
 	zrevrank friends:duncan chani
 
-We use `zrevrank` instead of `zrank` since Redis' default sort is from low to high (but in this case we are ranking from high to low). The most obvious use-case for sorted sets is a leaderboard system. In reality though, anything you want sorted by an some integer, and be able to efficiently manipulate based on that score, might be a good fit for a sorted set.
+Nós usamos `zrevrank` em vez de `zrank` pois a ordenação padrão do Redis é do menor para o maior valor, e neste caso queremos do maior para o menor. O caso de uso mais óbvio para conjuntos ordenados é um sistema de leaderboard. Na verdade, qualquer coisa que você queira ordenada por um inteiro, e que você queira manipular eficientemente baseado neste score, vai ser uma boa oportunidade para usar um conjunto ordenado.
 
-### In This Chapter
+### Neste Capítulo
 
-That's a high level overview of Redis' five data structures. One of the neat things about Redis is that you can often do more than you first realize. There are probably ways to use string and sorted sets that no one has thought of yet. As long as you understand the normal use-case though, you'll find Redis ideal for all types of problems. Also, just because Redis exposes five data structures and various methods, don't think you need to use all of them. It isn't uncommon to build a feature while only using a handful of commands.
+Esta é uma visão geral das cinco estruturas de dados do Redis. Uma das coisas mais legais do Redis é que na maioria das vezes você pode fazer mais do que você percebe a princípio. Provavelmente, há formas de usar strings e conjuntos ordenados que ninguém pensou ainda. Contanto que você entenda o caso de uso normal, você vai achar o Redis ideal para todos os tipos de problemas. Além disso, não é porque o Redis expõe cinco estruturas de dados e vários métodos que você precisa usar todos eles. É comum implementar um recurso usando apenas uns poucos comandos.
 
 \clearpage
 
