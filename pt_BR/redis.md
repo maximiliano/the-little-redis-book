@@ -9,9 +9,9 @@
 
 ### Licença
 
-The Little Redis Book é licenciado sob a licença Attribution-NonCommercial 3.0 Unported. Você não deve pagar por este livro.
+The Little Redis Book é licenciado sob a licença Creative Commons de Atribuição - Uso Não Comercial 3.0 Unported. Você não deve pagar por este livro.
 
-Você é livre para copiar, distribuir, modificar ou exibir o livro. Entretanto, peço que você sempre atribua este livro a mim, Karl Seguin, e não use-o para propósitos comerciais.
+Sinta-se livre para copiar, distribuir, modificar ou expor o livro. Entretanto, peço que você sempre atribua este livro a mim, Karl Seguin, e não use-o para propósitos comerciais.
 
 Você pode ver o *texto completo* da **licença em**:
 
@@ -27,7 +27,7 @@ Seu blog pode ser acessado em <http://openmymind.net> e seus tweets via [@karlse
 
 ### Agradecimentos
 
-Um obrigado especial para [Perry Neal](https://twitter.com/perryneal) por me emprestar seus olhos, mente e paixão. Você me forneceu uma ajuda sem preço.
+Um obrigado especial para [Perry Neal](https://twitter.com/perryneal) por ter me emprestado seus olhos, mente e paixão. Você me forneceu uma ajuda sem preço. Obrigado.
 
 ### Versão Mais Atual
 
