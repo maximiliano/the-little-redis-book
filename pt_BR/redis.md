@@ -91,90 +91,89 @@ Como você vai aprender em breve, a API do Redis é melhor definida como um conj
 
 ## Capítulo 1 - O Básico
 
-O que faz o Redis especial? Que tipos de problemas ele resolve? Em que os desenvolvedores precisam prestão atenção ao utilizar o Redis? Antes de responder qualquer destas perguntas, precisamos entender o que é o Redis.
+O que torna o Redis especial? Que tipos de problemas ele resolve? Em quê os desenvolvedores precisam prestar atenção ao usá-lo? Antes de responder qualquer uma destas perguntas, precisamos entender o que é o Redis.
 
-Redis é frequentemente descrito como um armazenamento persistente de chave-valor em memória. Eu não acho que seja uma descrição precisa. Redis guarda todos os dados em memória (mais sobre isso daqui a pouco), e escreve em disco para manter persistência, mas é muito mais do que um simples armazenamento de chave-valor. É importante dar um passo além desta conceito equivocado caso contrário sua perspectiva sobre o Redis e os problemas que ele resolve sera estreita.
+O Redis é frequentemente descrito como um armazenamento persistente de chave-valor em memória. Eu não acho que esta seja uma descrição precisa. O Redis mantém todos os dados em memória (veremos mais sobre isso daqui a pouco), e realmente escreve em disco para garantir persistência, mas é muito mais do que um simples armazenamento de chave-valor. É importante ir além deste conceito equivocado; caso contrário, sua perspectiva sobre o Redis e os problemas que ele resolve será muito limitada.
 
-A realidade é que o Redis expões cinco diferentes estruturas de dados, onde apenas uma delas é tipicamente chave-valor. Entender essas cinco estruturas de dados, como elas funcionam, que métodos elas expõem e o que você pode modelar com elas é a chave para entender o Redis. Primero, porém, vamos envolver nossas mentes em torno do que significa expor estruturas de dados.
+A realidade é que o Redis expõe cinco estruturas de dados diferentes, e apenas uma delas é um típico par chave-valor. Entender essas cinco estruturas de dados, como elas funcionam, quais métodos elas expõem e o que você pode modelar com elas é a chave para entender o Redis. Primeiro, porém, vamos tentar entender o que significa expor estruturas de dados.
 
-Se fôssemos aplicar este conceito de estruturas de dados ao mundo relacional, poderíamos dizer que bancos de dados expõem uma única estrutura de dados - tabelas. Tabelas são complexas e flexíveis. Não há muito o que voce não possa modelar, guardar ou manipular com elas. No entando, sua natureza genérica não é livre de inconvenientes. Especificamente, nem tudo é tão simples, ou tão rápido, como deveria ser. E se, ao invés de termos uma estrutura única-que-resolve-tudo, nós utilizássemos estruturas mais especializadas? Poderia haver algumas coisas que não conseguiríamos fazer (ou pelo menos, não conseguiríamos fazer tão bem), mas certamente ganharíamos em simplicidade e velocidade?
+Se fôssemos aplicar este conceito de estruturas de dados ao mundo relacional, poderíamos dizer que bancos de dados expõem uma única estrutura de dados - tabelas. Tabelas são tanto complexas quanto flexíveis. Não há muito o que você não possa modelar, guardar ou manipular com elas. No entanto, sua natureza genérica também tem suas desvantagens. Especificamente, nem tudo é tão simples, ou tão rápido, quanto deveria ser. E se, ao invés de termos uma estrutura única que resolve tudo, nós utilizássemos estruturas mais especializadas? Poderia haver algumas coisas que não conseguiríamos fazer (ou pelo menos, não conseguiríamos fazer tão bem), mas certamente ganharíamos em simplicidade e velocidade?
 
-Usando estruturas de dados para problemas específicos? Não é assim que nós codificamos? Você não usa uma tabela hash para cada parte de um dado, nem usa uma variável escalar. Para mim, isto é o que define a abordagem do Redis. Se você está lidando com escalares, listas, hashes, ou conjuntos, por que não armazená-los como escalares, listas, hashes e conjuntos? Por que checar a existência de um valor pode ser mais complexo do que apenas chamar `exists(key)` ou mais lento do que O(1) (tempo constante de busca que não vai demorar mais independente da quantidade de ítems)?
+Usar estruturas de dados específicas para problemas específicos? Não já é assim que nós programamos? Você não usa uma tabela hash para todos os tipos de dados, nem uma variável escalar. Para mim, isto define a abordagem do Redis. Se você está lidando com escalares, listas, hashes, ou conjuntos, por que não armazená-los como escalares, listas, hashes e conjuntos? Por que checar a existência de um valor deve ser mais complexo do que simplesmente chamar `exists(key)` ou mais lento do que O(1) (tempo constante de busca que não vai demorar mais independente da quantidade de itens)?
 
-## The Building Blocks
+## Os Blocos de Construção
 
 ### Bancos de Dados
 
-Redis possui o mesmo conceito básico de um banco de dados que você já seja familiar. Um banco de dados contém um conjuto de dados. O caso de uso típico de um banco de dados é agrupar todos os dados de uma aplicação e mantê-los separados dos dados de outra aplicação.
+O Redis possui o mesmo conceito básico de um banco de dados com o qual você já está familiarizado: um banco de dados contém um conjunto de dados. O caso de uso típico de um banco de dados é agrupar todos os dados de uma aplicação e mantê-los separados dos dados de outra aplicação.
 
-No Redis, bancos de dados são simplesmente identificados por um número sendo o padrão o número `0`. Se você quiser mudar para um banco de dados diferente você pode fazê-lo com o comando `select`. Na interface de linha de comando, digite `select 1`. Redis deve responder com uma mensagem `OK` e seu prompt deve mudar para algo como `redis 127.0.0.1:6379[1]>`. Se você quiser voltar para o banco de dados padrão, apenas digite `select 0` na interface de linha de comando.
+No Redis, bancos de dados são simplesmente identificados por um número, sendo o padrão o número `0`. Se você quiser mudar para um banco de dados diferente, você pode fazê-lo com o comando `select`. Na interface de linha de comando, digite `select 1`. O Redis deve responder com uma mensagem `OK` e seu prompt deve mudar para algo como `redis 127.0.0.1:6379[1]>`. Se você quiser voltar para o banco de dados padrão, apenas digite `select 0` na linha de comando.
 
-### Comandos, chaves e valores
+### Comandos, Chaves e Valores
 
-Enquanto Redis é mais do que apenas guardar chave-valor, no seu centro, cada uma de suas cinco estruturas de dados possuem pelo menos uma chave e um valor. É necessário entendermos chaves e valores antes de continuar para outras peças disponíveis de informação.
+Mesmo que o Redis seja mais do que apenas um armazenamento chave-valor, no seu cerne, cada uma de suas cinco estruturas de dados possuem pelo menos uma chave e um valor. É primordial que entendamos chaves e valores antes de continuar com os outros tipos de informação disponíveis.
 
-Chaves são como você identifica parte de um dado. Iremos tratar muito com chaves, mas por enquanto, é suficiente saber que uma chave pode parecer como `users:leto`. Pode-se esperar tal chave para conter informações a respeito do usuário chamado `leto`. Os dois pontos não tem significado especial, tanto que o Redis venha a se preocupar, mas usar um separador é uma maneira comum para que as pessoas organizem suas chaves.
+Chaves são como você identifica seções de dados. Vamos lidar muito com chaves, mas, por enquanto, basta saber que uma chave pode ser algo do tipo `users:leto`. Pode-se esperar que tal chave contenha informações sobre um usuário chamado `leto`. Os dois pontos não têm nenhum significado especial para o Redis, mas usar um separador é um padrão bastante utilizado para organizar chaves.
 
-Valores representam o dado atual associado com a chave. Podem ser qualquer coisa. Algumas vezes você irá guardar strings, outras inteiros, outras irá guardar objetos serializados (em JSON, XML ou algum outro formato). Para a maioria, Redis trata valores como uma matriz de bytes e não se importa com o que eles são. Note que diferentes drivers lidam com serialização diferentemente (alguns deixam isso para você) então neste livro iremos apenas falar sobre strings, inteiros e JSON.
+Valores representam os dados efetivamente associados com uma chave. Podem ser qualquer coisa. Algumas vezes você irá guardar strings, outras vezes números inteiros, outras irá guardar objetos serializados (em JSON, XML ou algum outro formato). A maioria parte do tempo, o Redis trata valores como uma matriz de bytes, sem importar com o que eles são. Note que cada driver trata a serialização de uma forma diferente (alguns deixam isso para você) então neste livro iremos apenas falar sobre strings, inteiros e JSON.
 
 Vamos sujar um pouco as mãos. Digite o seguinte comando:
 
 	set users:leto "{name: leto, planet: dune, likes: [spice]}"
 
-Está é a anatomia básica de um comando do Redis. Primeiro nós temos o atual comando, neste caso o `set`. Depois temos seus parâmetros. O comando `set` receve dois argumentos: a chave que estamos setando e o valor que atribuimos a ela. Muitos, mas não todos, comandos recebem uma chave (e quando recebem, muitas vezes é o primeiro argumento). Você consegue adivinhar como obter este valor? Espero que você consiga (mas não se preocupe se não estiver certo):
+Esta é a anatomia básica de um comando do Redis. Primeiro nós temos o comando de fato, neste caso o `set`. Depois temos seus parâmetros. O comando `set` recebe dois argumentos: a chave que estamos definindo e o valor que atribuímos a ela. Muitos, mas não todos, comandos recebem uma chave (e, quando recebem, muitas vezes é o primeiro argumento). Você consegue adivinhar como pegar este valor? Espero que você consiga (mas não se preocupe se não tinha certeza!):
 
 	get users:leto
 
-Siga em frente e brinque com outras combinações. Chaves e valores são conceitos fundamentais, e os comandos `get` e `set` são a maneira mais simples de brincar com eles. Crie mais usuários, tente diferentes tipos de chaves, tente valores diferentes.
+Siga em frente e brinque com outras combinações. Chaves e valores são conceitos fundamentais, e os comandos `get` e `set` são a maneira mais simples de brincar com eles. Crie mais usuários, tente outros tipos de chaves, tente valores diferentes.
 
 ### Consultando
 
-A medida que andamos, duas coisas se tornarão claras. No que diz respeito ao Redis, chaves são tudo e valores não são nada. Ou, de uma outra forma, o Redis não permite que você busque valores de um objeto. Face ao exposto, não podemos encontrar os usuários que vivem no planeta `dune`.
+A medida que prosseguirmos, duas coisas se tornarão claras. No que diz respeito ao Redis, chaves são tudo e valores não são nada. Ou, de outra forma, o Redis não permite que você faça consultas nos valores de um objeto. Face ao exposto, não podemos encontrar os usuários que vivem no planeta `dune`.
 
-Para muitos, isto pode causar alguma preocupação. Vivemos em um mundo onde consulta de dados é tão flexível e poderosa que a maneira do Redis parece primitiva e não pragmática. Não deixe que isto te perturbe muito. Lembre-se, Redis não é uma solução única-que-resolve-tudo. Haverá coisas que simplesmente não se encaixam alí (devido a limitação das consultas). Além disso, considere que em alguns casos você irá encontrar novas formas de modelar seus dados.
+Para muitos, isto pode ser preocupante. Vivemos em um mundo onde as consultas de dados são tão flexíveis e poderosas que a abordagem do Redis parece primitiva e nem um pouco prática. Não deixe que isto lhe perturbe muito. Lembre-se: Redis não é a solução para tudo. Haverá coisas que simplesmente não se encaixam nele (devido à limitação das consultas). Além disso, considere que em alguns casos você vai encontrar novas formas de modelar seus dados.
 
-Iremos analisar exemplos mais concretos a medida que avançamos, mas é importante entendermos que esta é a realidade básica do Redis. Ela nos ajudará a entender porque valores podem ser qualquer coisa - o Redis nunca precisa ler ou entendê-los. Além disso, ajuda nossa mente a pensar a respeito de modelagem neste novo mundo.
+Vamos analisar exemplos mais concretos à medida que avançamos, mas é importante entender que esta é a realidade básica do Redis. Ela nos ajudará a entender porque valores podem ser qualquer coisa - o Redis nunca precisa ler ou entendê-los. Isto também ajuda nossa mente a pensar sobre a modelagem neste novo mundo.
 
 ### Memória e Persistência
 
-Mencionamos anteriormente que Redis é uma armazenagem persistente em memória. Em relação a persistência, por padrão, o Redis escreve uma versão do banco de dados no disco baseado em quantas chaves foram alteradas. Você configura isto para que após X números de chaves mudem, então salve o banco de dados a cada Y segundos. Por padrão, o Redis irá salvar o banco de dados a cada 60 segundos se 1000 ou mais chaves foram alteradas *all the way to* 15 minutos se 9 ou menos chaves foram alteradas.
+Já dissemos que o Redis é um armazenamento persistente em memória. Em relação à persistência, por padrão, o Redis escreve uma versão do banco de dados no disco baseado em quantas chaves foram alteradas. Você configura isto para que, se um número X de chaves mudar, então salve o banco de dados a cada Y segundos. Por padrão, o Redis irá salvar o banco de dados a cada 60 segundos se 1000 ou mais chaves foram alteradas, e vai levar até 15 minutos para salvar novamente se 9 ou menos chaves foram alteradas.
 
-Alternativamente (ou adicionalmente ao instantâneo), Redis pode rodar em modo append. Toda vez que uma chabe mudar, um arquivo somente adição é atualizado no disco. Em alguns casos é aceitável perder 60 segundos de dados, em troca de performance, caso haja alguma falha de hardware ou software. Em alguns casos é inaceitável. Redis dá a você a opção. No capítulo 5 veremos uma terceira opção, que é o descarregamento de persistência para um escravo.
+Alternativamente (ou em adição à geração de instantâneos), o Redis pode rodar em modo append. Toda vez que uma chave mudar, um arquivo somente-adição é atualizado no disco. Em alguns casos é aceitável perder 60 segundos de dados, em troca de performance, caso haja alguma falha de hardware ou software. Em alguns casos é inaceitável. O Redis lhe dá a opção. No capítulo 5 veremos uma terceira opção, que é delegar a persistência a um escravo.
 
-Em relação a memória, Redis deixa todos os seus dados na memória. A implicação óbvia isto é o custo de rodar o Redis: RAM é a parte mais cara do hardware do servidor.
+Quanto à memória, o Redis mantém todos os dados em memória. A implicação óbvia disto é o custo de rodar o Redis: a parte mais cara do hardware do servidor ainda é a RAM.
 
-Eu sinto que alguns desenvolvedores perderam a noção de quão pouco espaço os dados podem ocupar. A obra completa de William Shakespeare ocupa grosseiramente 5.5MB de armazenamento. Quanto a escalabilidade, outras soluções tendem a ser limitadas a IO ou CPU. Qual limitaçõo (RAM ou IO) será necessária para você escalar para mais máquinas realmente vai depender do tipo de dado e como você está armazenando e consultando. A menos que você esteja guardando grandes arquivos multimídias no Redis, o aspecto em memória provavelmente não é um problema. Para aplicações onde são, você provavelmente optará por ser limitado a IO do que a memória.
+Eu tenho a impressão que alguns desenvolvedores perderam a noção de quão pouco espaço os dados podem ocupar. A obra completa de William Shakespeare ocupa cerca de 5.5MB de armazenamento. Quanto à escalabilidade, outras soluções tendem a ser limitadas por IO ou CPU. Qual limitaçõo (RAM ou IO) será necessária para você escalar para mais máquinas realmente vai depender do tipo de dado e de como você está armazenando e consultando. A menos que você esteja guardando grandes arquivos multimídia no Redis, o fato dele guardar tudo em memória provavelmente não será problema. Para aplicações onde são, você provavelmente optará por ser limitado a IO do que a memória. XXX: confirmar tradução da expressão "trade for"
 
-Redis adicionou suporte a memória virtual. No entanto, este recurso foi visto como falha (pelos próprios desenvolvedores do Redis) e seu uso é ultrapassado.
+O Redis adicionou suporte a memória virtual. No entanto, este recurso foi visto como erro (pelos próprios desenvolvedores do Redis) e seu uso foi tornado obsoleto.
 
-(Para informação, os 5.5MB de arquivos com a Obra completa de Shakespeare podem ser compactados para quase 2MB. Redis não faz auto-compressão mas, como ele trata valores como bytes, não há razão para que você não possa trocar tempo de processamento por memória compactando/descompactando o dado você mesmo.)
+(Para informação, os 5.5MB de arquivos com a obra completa de Shakespeare podem ser compactados em quase 2MB. O Redis não faz compressão automática, mas, como ele trata valores como bytes, não há razão para que você não possa trocar tempo de processamento por memória compactando/descompactando os dados você mesmo.)
 
-### Unindo tudo
+### Juntando Tudo
 
-Nós tivemos contato com um número de tópicos de alto nível. A última coisa que gostaria de fazer antes de mergulhar no Redis é trazer alguns dos tópicos juntos. Especificamente, limtações de consulta, estruturas de dados e a maneira que Redis guarda os dados em memória.
+Nós tivemos contato com vários tópicos de alto nível. A última coisa que eu gostaria de fazer antes de mergulhar no Redis é juntar alguns desses tópicos. Especificamente, as limitações de consulta, estruturas de dados e a maneira com a qual o Redis guarda os dados em memória.
 
-Quando você une estas três coisas termina com algo maravilhoso: velocidade. Algumas pessoas imaginam "Claro que o Redis é rápido, está tudo em memória." Mas é apenas parte dele. A real razão para que o Redis brilhe sobre outras soluções são suas estruturas de dados especializadas.
+Quando você une estas três coisas termina com algo maravilhoso: velocidade. Algumas pessoas imaginam "Claro que o Redis é rápido, está tudo em memória." Mas isso é apenas uma parte da história. O motivo real do Redis se destacar entre outras soluções está em suas estruturas de dados especializadas.
 
-Quão rápido? Depende de várias coisas - quais comandos você está utilizando, o tipo de dado, e por aí. Mas a performance do Redis tende a ser medida em dezenas de milhares, ou centenas de milhares de operações **por segundo**. Você pode executar o `redis-benchmark` (que está no mesmo diretório do `redis-server` e do `redis-cli`) para testar você mesmo.
+Quão rápido? Depende de muita coisa - quais comandos você está utilizando, o tipo de dados, e por aí vai. Mas o desempenho do Redis costuma ser medido em dezenas de milhares, ou centenas de milhares de operações **por segundo**. Você pode executar o `redis-benchmark` (que está no mesmo diretório do `redis-server` e do `redis-cli`) para testar você mesmo.
 
+Uma vez eu alterei um código que usava em um modelo tradicional para usar o Redis. Um teste de carga que escrevi levou mais de 5 minutos para finalizar usando o modelo relacional. No Redis, levou 150ms. Nem sempre você tem este ganho massivo de performance, mas espero que isto dê uma idéia a respeito do que estamos falando.
 
-Certa vez eu alterei um código que usava em um modelo tradicional para usar com o Redis. Um teste de carga que escrevi durou 5 minutos para finalizar usando o modelo relacional. Durou cerca de 150ms para finalizar no Redis. Nem sempre você tem este ganho massivo de performance, mas espero que dê uma idéia a respeito do que estamos falando.
+É importante entender este aspecto do Redis porque ele impacta em como você interage com ele. Desenvolvedores com experiência em SQL frequentemente trabalham em minimizar o número de consultas que fazem ao banco de dados. É um bom conselho para qualquer sistema, incluindo o Redis. No entanto, como estamos lidando com estruturas de dados mais simples, em algumas ocasiões vamos precisar ir ao servidor do Redis várias vezes para atingir nosso objetivo. Tais padrões de acesso a dados podem não parecer naturais à primeira vista, mas na realidade o custo tende a ser insignificante comparado a toda a performance que ganhamos.
 
-É importante entender este aspecto do Redis porque ele impacta em como você interage com ele. Desenvolvedores com uma experiência em SQL frequentemente trabalham em minimizar o número de ida e voltas que fazem ao banco de dados. É um bom conselho para qualquer sistema, incluindo o Redis. No entando, já que estamos lidando com estruturas de dados simples, algumas vezes precisaremos ir no servidor do Redis multiplas vezes para atingir nosso objetivo. Tais padrões de acesso a dados podem parecer não naturais a primeira vista, mas na realidade ele tende a ser um custo insignificante comparado a toda a performance que ganhamos.
+### Neste Capítulo
 
-### Neste capítulo
-
-Ainda que mal brincamos com o Redis, nós cobrimos uma vasta gama de tópicos. Não se preocupe se algo não parece claro - como consultas. No próximo capítulo nós iremos colocar a mão na massa e qualquer dúvida que você tiver esperamos que seja exclarecida.
+Mesmo mal tendo brincado com o Redis, nós cobrimos uma vasta gama de assuntos. Não se preocupe se algo não ficou muito claro - como as consultas. No próximo capítulo nós vamos colocar a mão na massa e as perguntas que você está se fazendo agora certamente se responderão.
 
 Os pontos importantes deste capítulo são:
 
-* Chaves são strings que identificam partes de dados (valores)
+* Chaves são strings que identificam seções dos dados (valores)
 
-* Valores são arbitrariamente matriz de bytes que o Redis não se importa
+* Valores são matrizes de bytes arbitrários com os quais o Redis não se importa
 
-* Redis expõe (e é implementado como) cinco estruturas de dados especializadas
+* O Redis expõe (e é implementado como) cinco estruturas de dados especializadas
 
-* Combinados, eles fazem o Redis rápido e fácil de usar, mas não adequado para todos os casos
+* Combinados, os pontos acima deixam o Redis rápido e fácil de usar, mas não adequado para todos os cenários
 
 \clearpage
 
