@@ -179,9 +179,9 @@ Os pontos importantes deste capítulo são:
 
 ## Capítulo 2 - As Estruturas de Dados
 
-É hora de ver as 5 estruturas de dados do Redis. Vamos explicar o que cada uma faz, quais métodos estão disponíveis e em quais tipos de recursos/dados você pode usá-las.
+É hora de ver as 5 estruturas de dados do Redis. Vamos explicar o que cada uma faz, quais métodos estão disponíveis e em quais tipos de recursos você pode usá-las.
 
-As únicas construções do Redis que vimos até agora foram os comandos, chaves e valores. Até então, nada concreto sobre estruturas de dados. Quando usamos o comando `set`, como o Redis sabia que estrutura de dados usar? Acontece que cada comando é específico para uma estrutura de dados. Por exemplo, quando você usa o `set`, você está guardando o valor numa estrutura do tipo string. Quando você usa o `hset`, você está guardando o mesmo valor num hash. Dado o pequeno tamanho do vocabulário do Redis, isso é bem gerenciável.
+As únicas construções do Redis que vimos até agora foram os comandos, chaves e valores. Até então, nada concreto sobre estruturas de dados. Quando usamos o comando `set`, como o Redis sabia que devia usar uma string? Acontece que cada comando é específico para uma estrutura de dados. Por exemplo, quando você usa `set`, você está guardando o valor numa estrutura do tipo string. Quando você usa `hset`, você está guardando o mesmo valor num hash. Dado o pequeno tamanho do vocabulário do Redis, isso é bem gerenciável.
 
 **[O site do Redis](http://redis.io/commands) tem uma ótima documentação de referência. Não há porque repetir o trabalho que eles já fizeram. Vamos cobrir apenas os comandos mais importantes para entender o propósito de uma estrutura de dados.**
 
@@ -191,11 +191,11 @@ Não há nada mais importante que se divertir e fazer testes. Você sempre pode 
 
 Strings são a estrutura de dados mais básica do Redis. Quando você pensa num par chave-valor, você está pensando em strings. Não se deixe confundir pelo nome: como sempre, seu valor pode ser qualquer coisa. Eu prefiro chamá-los de "escalares", mas talvez seja só eu.
 
-Nós já vimos um caso de uso comum para strings: guardar instâncias de objetos por chave. Isto é algo que você pode fazer uso pesado:
+Nós já vimos um caso de uso comum para strings: guardar instâncias de objetos por chave. Isto é algo do qual você pode fazer uso pesado:
 
 	set users:leto "{name: leto, planet: dune, likes: [spice]}"
 
-O Redis também lhe permite fazer algumas operações adicionais. Por exemplo, `strlen <chave>` pode ser usado para obter o comprimento do valor de uma chave; `getrange <key> <start> <end>` retorna o range especificado de valores; `append <key> <value>` adiciona um valor ao final de outro (ou cria um, se já não existir). Vá em frente e tente-os. Isso é o que eu obtenho:
+O Redis também lhe permite fazer algumas operações adicionais. Por exemplo, `strlen <chave>` pode ser usado para obter o comprimento do valor de uma chave; `getrange <key> <start> <end>` retorna a sequência especificada de valores; `append <key> <value>` adiciona um valor ao final de outro (ou cria um, se já não existir). Vá em frente e tente-os. Isso é o que eu obtenho:
 
 	> strlen users:leto
 	(integer) 42
@@ -206,9 +206,9 @@ O Redis também lhe permite fazer algumas operações adicionais. Por exemplo, `
 	> append users:leto " OVER 9000!!"
 	(integer) 54
 
-Você deve estar pensando: isso é ótimo, mas não faz sentido. Você não pode adicionar uma string ou obter um range a partir de um JSON e isso funcionar. Você está certo - a lição aqui é que apenas alguns dos comandos, especialmente os que lidam com strings, só fazem sentido com alguns tipos específicos de dados.
+Você deve estar pensando: isso é ótimo, mas não faz sentido. Você não pode adicionar uma string ou obter um range a partir de um JSON e isso funcionar. Você está certo - a lição aqui é que alguns comandos, especialmente os que lidam com strings, só fazem sentido com alguns tipos específicos de dados.
 
-Mais cedo, aprendemos que o Redis não liga para os seus valores. Isso quase sempre é verdade. Entretanto, alguns comandos de strings são específicos a alguns tipos ou estruturas de valores. Como um exemplo vago, eu poderia ver os comandos `append` e `getrange` acima sendo úteis em alguma serialização customizada com uso de espaço eficiente. Estes aqui incrementam ou decrementam o valor de uma string:
+Mais cedo, aprendemos que o Redis não se importa com seus valores. Isso quase sempre é verdade. Entretanto, alguns comandos de strings são específicos a alguns tipos ou estruturas de valores. Como um exemplo vago, poderíamos ver os comandos `append` e `getrange` acima como úteis em alguma serialização customizada com uso de espaço eficiente. Estes aqui incrementam ou decrementam o valor de uma string:
 
 	> incr stats:page:about
 	(integer) 1
@@ -224,7 +224,7 @@ Como você deve imaginar, strings do Redis são ótimas para analytics. Tente in
 
 Um exemplo mais avançado são os comandos `setbit` e `getbit`. Há um [artigo excelente](http://blog.getspool.com/2011/11/29/fast-easy-realtime-metrics-using-redis-bitmaps/) sobre como a Spool usa esses dois comandos para responder eficientemente à questão "quantos visitantes únicos tivemos hoje". Para 128 milhões de usuários, um laptop gera a resposta em menos de 50ms e usa apenas 16MB de memória.
 
-Não importa que você entenda como os bitmaps funcionam ou como a Spool os utiliza, mas sim entender como as strings do Redis são mais poderosas do que parecem. Mesmo assim, os casos mais comuns são os que vimos acima: guardar objetos (complexos ou não) e contadores. E, como obter um valor por chave é tão rápido, strings são muito usadas para fazer cache de dados.
+Não importa que você entenda como os bitmaps funcionam ou como a Spool os utiliza, mas sim entender como as strings do Redis são mais poderosas do que parecem. Mesmo assim, os casos mais comuns são os que vimos acima: guardar objetos (complexos ou não) e contadores. E, como obter um valor por chave é muito rápido, strings são muito usadas para fazer cache de dados.
 
 ### Hashes
 
@@ -241,13 +241,13 @@ Também podemos definir ou obter vários campos ao mesmo tempo, obter todos os c
 	hkeys users:goku
 	hdel users:goku age
 
-Como você pode notar, hashes nos dão um pouco mais de controle que strings normais. Ao invés de guardar um usuário como um valor único serializado, poderíamos usar um hash para obter uma representação mais precisa. O benefício seria ter a habilidade de puxar ou atualizar/excluir partes específicas dos dados sem ter que ler ou escrever o valor inteiro.
+Como você pode notar, hashes nos dão um pouco mais de controle que strings normais. Ao invés de guardar um usuário como um valor único serializado, poderíamos usar um hash para obter uma representação mais precisa. O benefício seria ter a habilidade de obter, atualizar ou excluir partes específicas dos dados, sem ter que ler ou escrever o valor inteiro.
 
 Ver os hashes pela perspectiva de um objeto bem definido, como um usuário, é a chave para entender como eles funcionam. E é verdade que, por razões de performance, um controle mais granular pode ser útil. Todavia, no próximo capítulo vamos ver como os hashes podem ser usados para organizar seus dados e facilitar as consultas. Na minha opinião, é nisso que os hashes se destacam de verdade.
 
 ### Listas
 
-Listas deixam você guardar e manipular um vetor de valores para uma determinada chave. Você pode adicionar valores à lista, pegar o primeiro ou o último valor e manupular valores em uma determinada posição. As listas mantêm a ordem inicial e tem operações baseadas em índices muito eficientes. Nós poderíamos ter uma lista `newusers` para acompanhar quais os usuários que se registraram por último em nosso site:
+Listas deixam você guardar e manipular um vetor de valores para uma determinada chave. Você pode adicionar valores à lista, pegar o primeiro ou o último valor e manipular valores em uma determinada posição. As listas mantêm a ordem inicial e tem operações baseadas em índices muito eficientes. Nós poderíamos ter uma lista `newusers` para acompanhar quais os usuários que se registraram por último em nosso site:
 
 	lpush newusers goku
 	ltrim newusers 0 50
