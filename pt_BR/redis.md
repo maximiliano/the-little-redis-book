@@ -243,8 +243,8 @@ Primeiro nós adicionamos um novo usuário ao início da lista, depois cortamos 
 
 Esta também é a primeira vez que estamos vendo um valor em uma chave referenciando um valor em outra. Se quiséssemos obter os detalhes dos últimos 10 usuários, faríamos a seguinte combinação:
 
-	keys = redis.lrange('newusers', 0, 10)
-	redis.mget(*keys.map {|u| "users:#{u}"})
+    ids = redis.lrange('newusers', 0, 10)
+    redis.mget(*ids.map {|u| "users:#{u}"})
 
 O código acima é um exemplo em Ruby que nos mostra o tipo de consultas múltiplas das quais já falamos.
 
