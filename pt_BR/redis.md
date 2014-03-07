@@ -304,7 +304,7 @@ A documentação do Redis nos fala a notação do Grande-O para cada um de seus 
 
 O mais rápido possível é O(1), que é uma constante. Tanto faz se estamos lidando com 5 ou 5 milhões de itens, vamos ter o mesmo desempenho. O comando `sismember`, que nos diz se um valor pertence a um conjunto, é O(1). `sismember` é um comando poderoso, e as características de desempenho dele são um motivo forte para isso. Vários comandos do Redis são O(1).
 
-A complexidade logarítmica, ou O(log(N)), é a segunda possibilidade mais rápida, porque ela varre seções cada vez menores. Usando esta abordagem de "dividir e conquistar", um grande número de itens é rapidamente quebrado em poucas iterações. `zadd` é um comando O(log(N)), onde N é o número de elementos que já pertencem ao conjunto.
+A complexidade logarítmica, ou O(log(N)), é a segunda possibilidade mais rápida, porque ela varre seções cada vez menores. Usando esta abordagem de "dividir e conquistar", um grande número de itens é rapidamente quebrado em poucas iterações. `zadd` é um comando O(log(N)), onde N é o número de elementos que já pertencem ao conjunto ordenado.
 
 Depois temos comandos lineares, ou O(N). Procurar por uma coluna não-indexada em uma tabela é uma operação O(N), assim como usar o comando `ltrim`. Entretanto, no caso do `ltrim`, N não é o número de elementos na lista, mas sim os elementos a serem removidos. Usar `ltrim` para remover 1 item de uma lista de milhões vai ser mais rápido que usar `ltrim` para remover 10 itens de uma lista de milhares (apesar que eles provavelmente vão ser tão rápidos que você nem conseguiria medir).
 
@@ -724,9 +724,7 @@ Nosso último capítulo é dedicado a alguns aspectos administrativos do Redis. 
 
 ## Configuração
 
-Quando você rodou o servidor do Redis pela primeira vez, ele lhe avisou que o arquivo `redis.conf` não pôde ser encontrado. Este arquivo pode ser usado para configurar vários aspetos do Redis. Um arquivo `redis.conf` bem documentado está disponível em cada versão do Redis. O arquivo de exemplo contém as opções padrão de configuração, sendo útil tanto para entender o que os ajustes fazem quanto para saber quais são os valores padrão de cada ajuste. Você pode encontrá-lo em <https://github.com/antirez/redis/raw/2.4.6/redis.conf>.
-
-**Este é o arquivo de configuração do Redis 2.4.6. Você deve substituir o "2.4.6" na URL acima com a sua versão. Você pode descobrir sua versão executando o comando `info` e olhando o primeiro valor.**
+Quando você rodou o servidor do Redis pela primeira vez, ele lhe avisou que o arquivo `redis.conf` não pôde ser encontrado. Este arquivo pode ser usado para configurar vários aspetos do Redis. Um arquivo `redis.conf` bem documentado está disponível em cada versão do Redis. O arquivo de exemplo contém as opções padrão de configuração, sendo útil tanto para entender o que os ajustes fazem quanto para saber quais são os valores padrão de cada ajuste. Você pode encontrá-lo em <http://download.redis.io/redis-stable/redis.conf>.
 
 Como o arquivo é bem documentado, nós não vamos analisar cada ajuste.
 
