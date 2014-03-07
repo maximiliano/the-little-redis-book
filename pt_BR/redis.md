@@ -621,6 +621,7 @@ In addition to `scan`, `hscan`, `sscan` and `zscan` commands were also added. Th
 
 Este capítulo focou nos comandos que não são específicos às estruturas de dados. Como todo o resto, o uso deles depende da situação. É normal construir uma aplicação ou recurso que não usa expiração, publicação/assinatura nem ordenação; mas é bom saber que eles estão ali. Além disso, nós tocamos em apenas alguns comandos. Há mais, e, uma vez que você tenha digerido o material deste livro, vale a pena olhar a [lista completa](http://redis.io/commands).
 
+TODO: Traduzir esse capítulo
 # Chapter 5 - Lua Scripting
 
 Redis 2.6 includes a built-in Lua interpreter which developers can leverage to write more advanced queries to be executed within Redis. It wouldn't be wrong of you to think of this capability much like you might view stored procedures available in most relational databases.
