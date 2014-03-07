@@ -1,6 +1,6 @@
-## Sobre Este Livro
+# Sobre Este Livro
 
-### Licença
+## Licença
 
 The Little Redis Book é licenciado sob a licença Creative Commons de Atribuição - Uso Não Comercial 3.0 Unported. Você não deve pagar por este livro.
 
@@ -10,7 +10,7 @@ Você pode ver o *texto completo* da **licença em**:
 
 <http://creativecommons.org/licenses/by-nc/3.0/legalcode>
 
-### Sobre o Autor
+## Sobre o Autor
 
 Karl Seguin é um desenvolvedor com experiência em vários campos e tecnologias. Ele é um contribuidor ativo em projetos de Software Livre, um escritor técnico e palestrante ocasional. Ele escreveu diversos artigos sobre e algumas ferramentas para Redis. Redis é usado no ranking e estatística de seu serviço gratuito para desenvolvedores casuais de jogos: [mogade.com](http://mogade.com/).
 
@@ -18,16 +18,16 @@ Karl escreveu [The Little MongoDB Book](http://openmymind.net/2011/3/28/The-Litt
 
 Seu blog pode ser acessado em <http://openmymind.net> e seus tweets via [@karlseguin](http://twitter.com/karlseguin)
 
-### Agradecimentos
+## Agradecimentos
 
 Um obrigado especial para [Perry Neal](https://twitter.com/perryneal) por ter me emprestado seus olhos, mente e paixão. Você me forneceu uma ajuda sem preço. Obrigado.
 
-### Versão Mais Atual
+## Versão Mais Atual
 
 O código mais recente deste livro está disponível em:
 <http://github.com/karlseguin/the-little-redis-book>
 
-## Introdução
+# Introdução
 
 Nos últimos anos, as técnicas e ferramentas usadas para persistência e busca de dados têm crescido num ritmo impressionante. Ao mesmo tempo em que é seguro dizer que os bancos de dados relacionais não vão a lugar algum, nós também podemos dizer que o ecossistema de dados nunca será o mesmo.
 
@@ -37,11 +37,11 @@ Embora você possa construir um sistema inteiro usando somente Redis, eu acho qu
 
 O objetivo deste livro é construir a fundação que você precisa para dominar o Redis. Nós iremos focar em aprender os cinco tipos de estruturas de dados do Redis e olhar diversas abordagens para a modelagem de dados. Nós também iremos tocar em alguns detalhes chave da parte administrativa e técnicas de depuração.
 
-## Começando
+# Começando
 
 Todos aprendemos de maneiras diferentes: alguns gostam de botar a mão na massa, outros de assistir vídeos e alguns de ler. Nada irá ajudar você a entender Redis mais do que utilizá-lo. Redis é fácil de instalar e vem com um console simples que nos dará tudo que precisamos. Vamos gastar alguns minutos para deixá-lo pronto para rodar em nossa máquina.
 
-### No Windows
+## No Windows
 
 O Redis em si não suporta o Windows oficialmente, mas existem algumas opções disponívels. Você não deveria rodá-las em produção, mas eu nunca experimentei limitações no ambiente de desenvolvimento.
 
@@ -49,7 +49,7 @@ Um port feito pela Microsoft Open Technologies, Inc. pode ser encontrado em <htt
 
 Outra solução, que já está disponível há algum tempo, pode ser encontrada em <https://github.com/dmajkic/redis/downloads>. Você pode baixar a versão mais recente (que deve estar no topo da lista). Extraia o arquivo zip e, dependendo da sua arquitetura, abra a pasta `64bit` ou `32bit`.
 
-### No *nix e MacOSX
+## No *nix e MacOSX
 
 Para usuários de *nix e Mac, a melhor opção é compilar a partir do código-fonte. As instruções, juntamente com o número da versão mais recente, estão disponíveis em <http://redis.io/download>. No tempo em que este livro foi escrito, a versão mais recente era a 2.6.2. Para instalar esta versão nós executaríamos:
 
@@ -62,7 +62,7 @@ Alternativamente, o Redis está disponível via diversos gerenciadores de pacote
 
 Se você compilar do fonte, as saídas binárias serão colocadas na pasta `src`. Acesse a pasta `src` executando o comando `cd src`.
 
-### Rodando e Conectando ao Redis
+## Rodando e Conectando ao Redis
 
 Se tudo funcionou, os binários do Redis devem estar disponíveis nas pontas de seus dedos. Redis tem um monte de executáveis. Nós iremos focar no servidor do Redis e na interface em linha de comando (como um cliente DOS). Vamos iniciar o servidor. No Windows, dê um clique duplo em `redis-server`. No *unix/MacOSX rode o comando `./redis-server`.
 
@@ -74,11 +74,11 @@ Você pode testar se tudo está funcionando digitando `info` na interface de lin
 
 Se você está tendo problemas com o procedimento anterior, eu sugiro que você busque ajuda no [grupo oficial de suporte do Redis](https://groups.google.com/forum/#!forum/redis-db).
 
-## Drivers do Redis
+# Drivers do Redis
 
 Como você vai aprender em breve, a API do Redis é melhor definida como um conjuto explícito de funções. Ela tem um aspecto simples e processual. Isto significa que tanto usando a ferramenta da linha de comando como um driver para sua linguagem favorita, vai ser tudo muito parecido. Portanto, você não deve ter problemas problemas em acompanhar os passos seguintes se você preferir usar uma linguagem de programação. Se preferir, siga para a [página de clientes] e baixe o driver apropriado.
 
-## Capítulo 1 - O Básico
+# Capítulo 1 - O Básico
 
 O que torna o Redis especial? Que tipos de problemas ele resolve? Em quê os desenvolvedores precisam prestar atenção ao usá-lo? Antes de responder qualquer uma destas perguntas, precisamos entender o que é o Redis.
 
@@ -90,15 +90,15 @@ Se fôssemos aplicar este conceito de estruturas de dados ao mundo relacional, p
 
 Usar estruturas de dados específicas para problemas específicos? Não já é assim que nós programamos? Você não usa uma tabela hash para todos os tipos de dados, nem uma variável escalar. Para mim, isto define a abordagem do Redis. Se você está lidando com escalares, listas, hashes, ou conjuntos, por que não armazená-los como escalares, listas, hashes e conjuntos? Por que checar a existência de um valor deve ser mais complexo do que simplesmente chamar `exists(key)` ou mais lento do que O(1) (tempo constante de busca que não vai demorar mais independente da quantidade de itens)?
 
-## Os Blocos de Construção
+# Os Blocos de Construção
 
-### Bancos de Dados
+## Bancos de Dados
 
 O Redis possui o mesmo conceito básico de um banco de dados com o qual você já está familiarizado: um banco de dados contém um conjunto de dados. O caso de uso típico de um banco de dados é agrupar todos os dados de uma aplicação e mantê-los separados dos dados de outra aplicação.
 
 No Redis, bancos de dados são simplesmente identificados por um número, sendo o padrão o número `0`. Se você quiser mudar para um banco de dados diferente, você pode fazê-lo com o comando `select`. Na interface de linha de comando, digite `select 1`. O Redis deve responder com uma mensagem `OK` e seu prompt deve mudar para algo como `redis 127.0.0.1:6379[1]>`. Se você quiser voltar para o banco de dados padrão, apenas digite `select 0` na linha de comando.
 
-### Comandos, Chaves e Valores
+## Comandos, Chaves e Valores
 
 Mesmo que o Redis seja mais do que apenas um armazenamento chave-valor, no seu cerne, cada uma de suas cinco estruturas de dados possuem pelo menos uma chave e um valor. É primordial que entendamos chaves e valores antes de continuar com os outros tipos de informação disponíveis.
 
@@ -116,7 +116,7 @@ Esta é a anatomia básica de um comando do Redis. Primeiro nós temos o comando
 
 Siga em frente e brinque com outras combinações. Chaves e valores são conceitos fundamentais, e os comandos `get` e `set` são a maneira mais simples de brincar com eles. Crie mais usuários, tente outros tipos de chaves, tente valores diferentes.
 
-### Consultando
+## Consultando
 
 A medida que prosseguirmos, duas coisas se tornarão claras. No que diz respeito ao Redis, chaves são tudo e valores não são nada. Ou, de outra forma, o Redis não permite que você faça consultas nos valores de um objeto. Face ao exposto, não podemos encontrar os usuários que vivem no planeta `dune`.
 
@@ -124,7 +124,7 @@ Para muitos, isto pode ser preocupante. Vivemos em um mundo onde as consultas de
 
 Vamos analisar exemplos mais concretos à medida que avançamos, mas é importante entender que esta é a realidade básica do Redis. Ela nos ajudará a entender porque valores podem ser qualquer coisa - o Redis nunca precisa ler ou entendê-los. Isto também ajuda nossa mente a pensar sobre a modelagem neste novo mundo.
 
-### Memória e Persistência
+## Memória e Persistência
 
 Já dissemos que o Redis é um armazenamento persistente em memória. Em relação à persistência, por padrão, o Redis escreve uma versão do banco de dados no disco baseado em quantas chaves foram alteradas. Você configura isto para que, se um número X de chaves mudar, então salve o banco de dados a cada Y segundos. Por padrão, o Redis irá salvar o banco de dados a cada 60 segundos se 1000 ou mais chaves foram alteradas, e vai levar até 15 minutos para salvar novamente se 9 ou menos chaves foram alteradas.
 
@@ -138,7 +138,7 @@ O Redis adicionou suporte a memória virtual. No entanto, este recurso foi visto
 
 (Para informação, os 5.5MB de arquivos com a obra completa de Shakespeare podem ser compactados em quase 2MB. O Redis não faz compressão automática, mas, como ele trata valores como bytes, não há razão para que você não possa trocar tempo de processamento por memória compactando/descompactando os dados você mesmo.)
 
-### Juntando Tudo
+## Juntando Tudo
 
 Nós tivemos contato com vários tópicos de alto nível. A última coisa que eu gostaria de fazer antes de mergulhar no Redis é juntar alguns desses tópicos. Especificamente, as limitações de consulta, estruturas de dados e a maneira com a qual o Redis guarda os dados em memória.
 
@@ -150,7 +150,7 @@ Uma vez eu alterei um código que usava em um modelo tradicional para usar o Red
 
 É importante entender este aspecto do Redis porque ele impacta em como você interage com ele. Desenvolvedores com experiência em SQL frequentemente trabalham em minimizar o número de consultas que fazem ao banco de dados. É um bom conselho para qualquer sistema, incluindo o Redis. No entanto, como estamos lidando com estruturas de dados mais simples, em algumas ocasiões vamos precisar ir ao servidor do Redis várias vezes para atingir nosso objetivo. Tais padrões de acesso a dados podem não parecer naturais à primeira vista, mas na realidade o custo tende a ser insignificante comparado a toda a performance que ganhamos.
 
-### Neste Capítulo
+## Neste Capítulo
 
 Mesmo mal tendo brincado com o Redis, nós cobrimos uma vasta gama de assuntos. Não se preocupe se algo não ficou muito claro - como as consultas. No próximo capítulo nós vamos colocar a mão na massa e as perguntas que você está se fazendo agora certamente se responderão.
 
@@ -164,7 +164,7 @@ Os pontos importantes deste capítulo são:
 
 * Combinados, os pontos acima deixam o Redis rápido e fácil de usar, mas não adequado para todos os cenários
 
-## Capítulo 2 - As Estruturas de Dados
+# Capítulo 2 - As Estruturas de Dados
 
 É hora de ver as 5 estruturas de dados do Redis. Vamos explicar o que cada uma faz, quais métodos estão disponíveis e em quais tipos de recursos você pode usá-las.
 
@@ -174,7 +174,7 @@ As únicas construções do Redis que vimos até agora foram os comandos, chaves
 
 Não há nada mais importante que se divertir e fazer testes. Você sempre pode apagar todos os valores de um banco de dados com o `flushdb`, então não se intimide e tente fazer coisas loucas!
 
-### Strings
+## Strings
 
 Strings são a estrutura de dados mais básica do Redis. Quando você pensa num par chave-valor, você está pensando em strings. Não se deixe confundir pelo nome: como sempre, seu valor pode ser qualquer coisa. Eu prefiro chamá-los de "escalares", mas talvez seja só eu.
 
@@ -213,7 +213,7 @@ Um exemplo mais avançado são os comandos `setbit` e `getbit`. Há um [artigo e
 
 Não importa que você entenda como os bitmaps funcionam ou como a Spool os utiliza, mas sim entender como as strings do Redis são mais poderosas do que parecem. Mesmo assim, os casos mais comuns são os que vimos acima: guardar objetos (complexos ou não) e contadores. E, como obter um valor por chave é muito rápido, strings são muito usadas para fazer cache de dados.
 
-### Hashes
+## Hashes
 
 Hashes são um bom exemplo de porque não é muito preciso chamar o Redis de um sistema chave-valor. Veja, de várias formas, hashes são como strings. A diferença importante é que eles fornecem um nível extra de indireção: um campo. Assim, os comandos correspondentes a `set` e `get` em um hash são:
 
@@ -232,7 +232,7 @@ Como você pode notar, hashes nos dão um pouco mais de controle que strings nor
 
 Ver os hashes pela perspectiva de um objeto bem definido, como um usuário, é a chave para entender como eles funcionam. E é verdade que, por razões de performance, um controle mais granular pode ser útil. Todavia, no próximo capítulo vamos ver como os hashes podem ser usados para organizar seus dados e facilitar as consultas. Na minha opinião, é nisso que os hashes se destacam de verdade.
 
-### Listas
+## Listas
 
 Listas deixam você guardar e manipular um vetor de valores para uma determinada chave. Você pode adicionar valores à lista, pegar o primeiro ou o último valor e manipular valores em uma determinada posição. As listas mantêm a ordem inicial e tem operações baseadas em índices muito eficientes. Nós poderíamos ter uma lista `newusers` para acompanhar quais os usuários que se registraram por último em nosso site:
 
@@ -250,7 +250,7 @@ O código acima é um exemplo em Ruby que nos mostra o tipo de consultas múltip
 
 É claro, listas não são boas apenas para guardar referências para outras chaves. Os valores podem ser qualquer coisa. Você poderia usar listas para guardar logs ou seguir o caminho que um usuário está fazendo pelo site. Se você estivesse escrevendo um jogo, poderia usá-las para guardar a fila de ações do jogador.
 
-### Conjuntos (Sets)
+## Conjuntos (Sets)
 
 Conjuntos servem para guardar valores únicos, e fornecem uma série de operações baseadas em conjuntos, como a união. Conjuntos não possuem ordem, mas fornecem operações baseadas valor muito eficientes. O exemplo clássico do uso de conjuntos é uma lista de amigos:
 
@@ -272,7 +272,7 @@ E até guardar o resultado em uma nova chave:
 
 Conjuntos são ótimos para etiquetar ou acompanhar outras propriedades de um valor para o qual não faz sentido haver duplicatas (ou quando queremos aplicar operações de conjuntos como interseção e união).
 
-### Conjuntos Ordenados (Sorted Sets)
+## Conjuntos Ordenados (Sorted Sets)
 
 A última e mais poderosa estrutura de dados é o conjunto ordenado. Se hashes são como strings com campos, então conjuntos ordenados são como conjuntos com pontuação. O score fornece as capacidades de ordenação e ranking. Se quiséssemos uma lista rankeada de amigos, poderíamos fazer:
 
@@ -288,15 +288,15 @@ Que tal descobrir o rank de `chani`?
 
 Nós usamos `zrevrank` em vez de `zrank` pois a ordenação padrão do Redis é do menor para o maior valor, e neste caso queremos do maior para o menor. O caso de uso mais óbvio para conjuntos ordenados é um sistema de leaderboard. Na verdade, qualquer coisa que você queira ordenada por um inteiro, e que você queira manipular eficientemente baseado neste score, vai ser uma boa oportunidade para usar um conjunto ordenado.
 
-### Neste Capítulo
+## Neste Capítulo
 
 Esta é uma visão geral das cinco estruturas de dados do Redis. Uma das coisas mais legais do Redis é que na maioria das vezes você pode fazer mais do que você percebe a princípio. Provavelmente, há formas de usar strings e conjuntos ordenados que ninguém pensou ainda. Contanto que você entenda o caso de uso normal, você vai achar o Redis ideal para todos os tipos de problemas. Além disso, não é porque o Redis expõe cinco estruturas de dados e vários métodos que você precisa usar todos eles. É comum implementar um recurso usando apenas uns poucos comandos.
 
-## Capítulo 3 - Explorando as Estruturas de Dados
+# Capítulo 3 - Explorando as Estruturas de Dados
 
 No capítulo anterior, falamos sobre as cinco estruturas de dados e demos alguns exemplos de quais tipos de problemas elas podem resolver. Agora é hora de ver alguns tópicos e padrões de projeto mais avançados, porém comuns.
 
-### Notação do Grande-O
+## Notação do Grande-O
 
 Através do livro nós fizemos referência à notação do Grande-O na forma O(n) ou O(1). A notação do Grande-O é usada para explicar como algo se comporta dado um certo número de elementos. No Redis, ela é usada para nos dizer o quão rápido é um comando, baseado no número de itens com os quais estamos lidando.
 
@@ -317,7 +317,7 @@ Há várias outras complexidades. As duas mais comuns que restam são O(N^2) e O
 Vale lembrar que a notação do Grande-O trata do pior caso. Quando dizemos que algo leva O(N), na verdade podemos encontrar o item logo de cara ou ele pode ser o último elemento possível.
 
 
-### Consultas Pseudo-Multi-Chave
+## Consultas Pseudo-Multi-Chave
 
 Uma situação comum com a qual você vai se deparar é querer consultar o mesmo valor em chaves diferentes. Por exemplo, você pode querer obter um usuário pelo email (quando ele loga pela primeira vez) e também por id (depois que ele logou). Uma solução terrível é duplicar seu objeto usuário como duas strings:
 
@@ -344,7 +344,7 @@ Para obter o mesmo usuário por email, executamos um `hget` seguido por um `get`
 
 Isto é algo que você vai acabar fazendo bastante. Para mim, é aqui que os hashes realmente brilham, mas não é um caso de uso óbvio até que você o veja pela primeira vez.
 
-### Referências e Índices
+## Referências e Índices
 
 Nós já vimos alguns exemplos de um valor apontando para outro. Vimos isso no nosso exemplo de listas, e vimos também na seção acima quando usamos hashes para facilitar um pouco as consultas. Essencialmente, isto se resume a ter que gerenciar manualmente os seus índices e referências entre valores. Sendo franco, eu acho que isso pode ser um pouco desestimulante, principalmente quando você pensa em ter que manter, atualizar e remover manualmente todas essas referências. Não há solução mágica para resolver esse problema no Redis.
 
@@ -362,7 +362,7 @@ Mas se você parar para pensar, bancos de dados relacionais tem o mesmo trabalho
 
 Novamente, ter que lidar manualmente com referências no Redis é desagradável. Mas quaisquer preocupações iniciais que você tenha sobre o desempenho ou as implicações de memória devem ser testadas. Você vai descobrir que não há problema.
 
-### Round Trips e Pipelines
+## Round Trips e Pipelines
 
 Nós já mencionamos que consultas frequentes ao servidor é um padrão comum no Redis. Já que é algo que você vai fazer sempre, é bom dar uma olhada em alguns dos recursos que podemos usar para aproveitar isso ao máximo.
 
@@ -390,7 +390,7 @@ Exatamente quais comandos você executa em um pipeline vai variar de driver para
 
 Como você já deve ter percebido, pipelines podem agilizar bastante uma importação em lotes!
 
-### Transações
+## Transações
 
 Todos os comandos do Redis são atômico, inclusive os que realizam múltiplas tarefas. Adicionalmente, o Redis tem suporte a transações quando se usa múltiplos comandos.
 
@@ -434,7 +434,7 @@ Não é assim que as transações funcionam no Redis. Mas, se você adicionar um
 
 Se outro cliente mudar o valor de `powerlevel` após termos usado o `watch` nele, nossa transação vai falhar. Se nenhum cliente mudar o valor, o `set` vai funcionar. Nós podemos executar este código em um loop até ele dar certo.
 
-### Anti-padrões de Chaves
+## Anti-padrões de Chaves
 
 No próximo capítulo, vamos falar de comandos que não estão relacionados a nenhuma estrutura de dados específica. Alguns destes são ferramentas administrativas e de depuração. Mas há um em particular do qual eu gostaria de falar: o comando `keys`. Este comando recebe um padrão e encontra todas as chaves que se encaixem nele. Este comando parece ser útil para várias tarefas, mas nunca deve ser usado em código de produção. Porque? Porque ele faz uma varredura linear por todas as chaves, vendo quais se encaixam. Ou, simplesmente, é lento.
 
@@ -450,16 +450,16 @@ A melhor solução é usar um hash. De forma bem parecida a como usamos hashes p
 Para obter todos os ids de bugs de uma conta, nós simplesmente rodamos `hkeys bugs:1233`. Para excluir um bug específico nós podemos fazer `hdel bugs:1233 2`, e para excluir uma conta nós podemos apagar a chave usando `del bugs:1233`.
 
 
-### Neste Capítulo
+## Neste Capítulo
 
 Esperamos que este capítulo, junto com o anterior, tenha lhe dado uma boa visão sobre como usar o Redis para implementar recursos reais. Há vários outros padrões que você pode usar para construir todo tipo de coisa, mas o segredo é entender as estruturas de dados fundamentais e como elas podem ser usadas para atingir coisas além da sua perspectiva inicial.
 
 
-## Capítulo 4 - Além das Estruturas de Dados
+# Capítulo 4 - Além das Estruturas de Dados
 
 Enquanto as cinco estruturas de dados formam o alicerce do Redis, há outros comandos que não são específicos de nenhuma estrutura de dados. Já vimos alguns destes: `info`, `select`, `flushdb`, `multi`, `exec`, `discard`, `watch` e `keys`. Este capítulo vai tratar de alguns outros comandos importantes.
 
-### Expiração
+## Expiração
 
 O Redis permite que você marque uma chave para expiração. Você pode fornecer uma hora absoluta no formato de timestamp Unix (segundos desde 1º de janeiro de 1970) ou um tempo de vida em segundos. Este comando se baseia em chaves, então não importa que tipo de estrutura de dados a chave representa.
 
@@ -477,7 +477,7 @@ Por fim, há um comando especial de strings – `setex` – que lhe permite defi
 
 	setex pages:about 30 '<h1>about us</h1>....'
 
-### Publicação e Assinaturas
+## Publicação e Assinaturas
 
 As listas do Redis possuem os comandos `blpop` e `brpop`, que retornam e removem o primeiro (ou último) elemento da lista, ou bloqueiam enquanto não houver um disponível. Eles podem ser usados para implementar uma fila simples.
 
@@ -496,7 +496,7 @@ Você pode assinar vários canais (`subscribe channel1 channel2 ...`), assinar u
 Finalmente, note que o comando `publish` retornou o valor 1. Isto indica o número de clientes que receberam a mensagem.
 
 
-### Monitor e Slow Log
+## Monitor e Slow Log
 
 O comando `monitor` lhe permite saber o que o Redis anda fazendo. É uma grande ferramenta de depuração que lhe permite ver de que forma a aplicação está interagindo com o Redis. Em uma das suas duas janelas do `redis-cli` (se uma ainda está com assinaturas, você pode usar o comando `unsubscribe` ou simplesmente fechar a janela e abrir outra) digite o comando `monitor`. Em outra, execute qualquer tipo de comando (como `get` ou `set`). Você deve ver estes comandos, bem como seus parâmetros, na primeira janela.
 
@@ -525,7 +525,7 @@ Para cada comando digitado, você deve ver quatro parâmetros:
 
 O slow log é guardado em memória, então não deve ser um problema habilitá-lo em produção, mesmo com um limite baixo. Por padrão, ele vai manter os últimos 1024 logs.
 
-### Ordenação
+## Ordenação
 
 Um dos comandos mais poderosos do Redis é o `sort`. Ele permite que você ordene os valores de uma lista, set ou sorted set (sorted sets são ordenados por score, não pelos membros dentro do set). Em sua forma mais simples, ele nos permite fazer:
 
@@ -586,7 +586,7 @@ O `sort` pode ser lento em sets grandes. A boa notícia é que a saída de um `s
 
 Combinar a capacidade de guardar os resultados do `sort` com os comandos de expiração que já vimos antes resulta num ótimo combo.
 
-### Neste Capítulo
+## Neste Capítulo
 
 Este capítulo focou nos comandos que não são específicos às estruturas de dados. Como todo o resto, o uso deles depende da situação. É normal construir uma aplicação ou recurso que não usa expiração, publicação/assinatura nem ordenação; mas é bom saber que eles estão ali. Além disso, nós tocamos em apenas alguns comandos. Há mais, e, uma vez que você tenha digerido o material deste livro, vale a pena olhar a [lista completa](http://redis.io/commands).
 
@@ -596,7 +596,7 @@ Redis 2.6 includes a built-in Lua interpreter which developers can leverage to w
 
 The most difficult aspect of mastering this feature is learning Lua. Thankfully, Lua is similar to most general purpose languages, is well documented, has an active community and is useful to know beyond Redis scripting. This chapter won't cover Lua in any detail; but the few examples we look at should hopefully serve as a simple introduction.
 
-## Why?
+# Why?
 
 Before looking at how to use Lua scripting, you might be wondering why you'd want to use it. Many developers dislike traditional stored procedures, is this any different? The short answer is no. Improperly used, Redis' Lua scripting can result in harder to test code, business logic tightly coupled with data access or even duplicated logic.
 
@@ -604,7 +604,7 @@ Properly used however, it's a feature that can simplify code and improve perform
 
 The examples in the following sections will better illustrate these points.
 
-## Eval
+# Eval
 
 The `eval` command takes a Lua script (as a string), the keys we'll be operating against, and an optional set of arbitrary arguments. Let's look at a simple example (executed from Ruby, since running multi-line Redis commands from its command-line tool isn't fun):
 
@@ -636,7 +636,7 @@ In the first (incorrect) case, how does Redis know which of the parameters are k
 
 This brings up a second question: why must keys be explicitly listed? Every command in Redis knows, at execution time, which keys are going to needed. This will allow future tools, like Redis Cluster, to  distribute requests amongst multiple Redis servers. You might have spotted that our above example actually reads from keys dynamically (without having them passed to `eval`). An `hget` is issued on all of Leto's male friends. That's because the need to list keys ahead of time is more of a suggestion than a hard rule. The above code will run fine in a single-instance setup, or even with replication, but won't in the yet-released Redis Cluster.
 
-## Script Management
+# Script Management
 
 Even though scripts executed via `eval` are cached by Redis, sending the body every time you want to execute something isn't ideal. Instead, you can register the script with Redis and execute it's key. To do this you use the `script load` command, which returns the SHA1 digest of the script:
 
@@ -649,7 +649,7 @@ Once we've loaded the script, we can use `evalsha` to execute it:
 
 `script kill`, `script flush` and `script exists` are the other commands that you can use to manage Lua scripts. They are used to kill a running script, removing all scripts from the internal cache and seeing if a script already exists within the cache.
 
-## Libraries
+# Libraries
 
 Redis' Lua implementation ships with a handful of useful libraries. While `table.lib`, `string.lib` and `math.lib` are quite useful, for me, `cjson.lib` is worth singling out. First, if you find yourself having to pass multiple arguments to a script, it might be cleaner to pass it as JSON:
 
@@ -674,23 +674,23 @@ Of course, the JSON library can also be used to parse values stored in Redis its
 
 Instead of getting the gender from specific hash field, we could get it from the stored friend data itself. (This is a much slower solution, and I personally prefer the original, but it does show what's possible).
 
-## Atomic
+# Atomic
 
 Since Redis is single-threaded, you don't have to worry about your Lua script being interrupted by another Redis command. One of the most obvious benefits of this is that keys with a TTL won't expire half-way through execution. If a key is present at the start of the script, it'll be present at any point thereafter - unless you delete it.
 
-## Administration
+# Administration
 
 The next chapter will talk about Redis administration and configuration in more detail. For now, simply know that the `lua-time-limit` defines how long a Lua script is allowed to execute before being terminated. The default is generous 5 seconds. Consider lowering it.
 
-## In This Chapter
+# In This Chapter
 
 This chapter introduced Redis' Lua scripting capabilities. Like anything, this feature can be abused. However, used prudently in order to implement your own custom and focused commands, it won't only simplify your code, but will likely improve performance. Lua scripting is like almost every other Redis feature/command: you make limited, if any, use of it at first only to find yourself using it more and more every day.
 
-## Capítulo 6 - Administração
+# Capítulo 6 - Administração
 
 Nosso último capítulo é dedicado a alguns aspectos administrativos do Redis. De forma alguma isso é um guia abrangente de administração do Redis. No melhor dos casos, vamos responder algumas das dúvidas mais básicas que novos usuários do Redis provavelmente vão ter.
 
-### Configuração
+## Configuração
 
 Quando você rodou o servidor do Redis pela primeira vez, ele lhe avisou que o arquivo `redis.conf` não pôde ser encontrado. Este arquivo pode ser usado para configurar vários aspetos do Redis. Um arquivo `redis.conf` bem documentado está disponível em cada versão do Redis. O arquivo de exemplo contém as opções padrão de configuração, sendo útil tanto para entender o que os ajustes fazem quanto para saber quais são os valores padrão de cada ajuste. Você pode encontrá-lo em <https://github.com/antirez/redis/raw/2.4.6/redis.conf>.
 
@@ -704,7 +704,7 @@ Também existe o comando `config get`, que exibe o valor de uma configuração. 
 
    config get *log*
 
-### Authentication
+## Authentication
 
 O Redis pode ser configurado para exigir uma senha. Isto pode ser feito através da configuração `requirepass` (que pode ser informada tanto no `redis.conf` quando com o comando `config set`). Quando o `requirepass` possui um valor configurado (que é a senha que deve ser utilizada), os clientes vão precisar executar um comando `auth password`.
 
@@ -715,11 +715,11 @@ Uma vez que o cliente esteja autenticado, ele poderá executar qualquer comando 
 
 Ou você pode desabilitar um comando, modificando o novo nome para uma string vazia.
 
-### Limitações de Tamanho
+## Limitações de Tamanho
 
 Enquanto você está começando a usar o Redis, você pode se perguntar "quantas chaves eu posso guardar?" Você pode também pensar quantos campos um hash pode ter (especialmente quando você usa-os para organizar seus dados), ou quantos elementos as listas e sets podem ter. Por instância, o limite prático para todos estes é na casa das centenas de milhões.
 
-### Replicação
+## Replicação
 
 O Redis suporta replicação, o que significa que enquanto você escreve em uma instância do Redis (o master, ou "mestre"), uma ou mais outras instâncias (os slaves, ou "escravos") são mantidas atualizadas pelo master. Para configurar um slave, você pode usar tanto a configuração `slaveof` quanto o comando `slaveof` (instâncias que rodam sem esta configuração são ou podem ser masters).
 
@@ -727,13 +727,13 @@ A replicação ajuda a proteger seus dados copiando-os para servidores diferente
 
 Infelizmente, a replicação do Redis não provê ainda failover automático. Se o master morrer, um slave precisa ser promovido manualmente. Ferramentas tradicionais de alta disponibilidade que usem monitoração de heartbeats e scripts para automatizar a troca são atualmente dores-de-cabeça necessárias se você quer atingir algum grau de alta disponibilidade com o Redis.
 
-### Backups
+## Backups
 
 Fazer backup do Redis é uma simples questão de copiar o snapshot do Redis para onde quer que você queira (S3, FTP, ...). Por padrão, o Redis salva o snapshot em um arquivo chamado `dump.rdb`. Você pode simplesmente copiar este arquivo a qualquer momento com `scp`, `ftp` ou `cp` (ou qualquer outra coisa).
 
 Não é incomum desabilitar tanto a gravação de snapshots quanto o arquivo append-only (aof) no master e deixar um slave tomar conta disso. Isso ajuda a reduzir a carga no master e lhe permite definir parâmetros de gravação mais agressivos no slave, sem ferir a responsividade geral do sistema.
 
-### Escalabilidade e Cluster Redis
+## Escalabilidade e Cluster Redis
 
 Replicação é a primeira ferramenta da qual um site em crescimento pode tirar vantagem. Alguns comandos são mais custosos que outros (`sort` por exemplo) e despachar a execução deles para um slave pode manter o sistema respondendo bem às consultas que chegam.
 
@@ -743,11 +743,11 @@ A boa notícia é que já existem esforços no sentido de um Cluster Redis. Isso
 
 Alta disponibilidade e escalabilidade são algo que pode ser atingido hoje, contanto que você esteja disposto a direcionar seu tempo e esforço para isto. Mais adiante, o Cluster Redis deve deixar as coisas bem mais fáceis.
 
-### Neste Capítulo
+## Neste Capítulo
 
 Dado o número de projetos e sites que já usam Redis, não resta dúvida que o Redis está pronto para produção, e que já tem estado assim por um bom tempo. Entretanto, algumas das ferramentas - especialmente as de segurança e disponibilidade - ainda são muito "verdes". O Cluster Redis, que esperamos ver em breve, deve ajudar a resolver alguns dos desafios de administração atuais.
 
-## Conclusão
+# Conclusão
 
 De várias maneiras, o Redis representa uma simplificação na forma como lidamos com dados. Ele remove muito da complexidade e abstração disponíveis em outros sistemas. Em vários casos, isso faz do Redis a escolha errada. Em outros casos, é como se o Redis tivesse sido feito especificamente para os seus dados.
 
