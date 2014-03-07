@@ -60,12 +60,12 @@ Outra solução, que já está disponível há algum tempo, pode ser encontrada 
 
 ### No *nix e MacOSX
 
-Para usuários de *nix e Mac, a melhor opção é compilar a partir do código-fonte. As instruções, juntamente com o número da versão mais recente, estão disponíveis em <http://redis.io/download>. No tempo em que este livro foi escrito, a versão mais recente era a 2.4.6. Para instalar esta versão nós executaríamos:
+Para usuários de *nix e Mac, a melhor opção é compilar a partir do código-fonte. As instruções, juntamente com o número da versão mais recente, estão disponíveis em <http://redis.io/download>. No tempo em que este livro foi escrito, a versão mais recente era a 2.6.2. Para instalar esta versão nós executaríamos:
 
-	wget http://redis.googlecode.com/files/redis-2.4.6.tar.gz
-	tar xzf redis-2.4.6.tar.gz
-	cd redis-2.4.6
-	make
+    wget http://redis.googlecode.com/files/redis-2.6.2.tar.gz
+    tar xzf redis-2.6.2.tar.gz
+    cd redis-2.6.2
+    make
 
 Alternativamente, o Redis está disponível via diversos gerenciadores de pacote. Por exemplo, usuários de MacOSX com Homebrew instalado pode simplesmente digitar `brew install redis`.)
 
@@ -139,7 +139,7 @@ Vamos analisar exemplos mais concretos à medida que avançamos, mas é importan
 
 Já dissemos que o Redis é um armazenamento persistente em memória. Em relação à persistência, por padrão, o Redis escreve uma versão do banco de dados no disco baseado em quantas chaves foram alteradas. Você configura isto para que, se um número X de chaves mudar, então salve o banco de dados a cada Y segundos. Por padrão, o Redis irá salvar o banco de dados a cada 60 segundos se 1000 ou mais chaves foram alteradas, e vai levar até 15 minutos para salvar novamente se 9 ou menos chaves foram alteradas.
 
-Alternativamente (ou em adição à geração de instantâneos), o Redis pode rodar em modo append. Toda vez que uma chave mudar, um arquivo somente-adição é atualizado no disco. Em alguns casos é aceitável perder 60 segundos de dados, em troca de performance, caso haja alguma falha de hardware ou software. Em alguns casos é inaceitável. O Redis lhe dá a opção. No capítulo 5 veremos uma terceira opção, que é delegar a persistência a um escravo.
+Alternativamente (ou em adição à geração de instantâneos), o Redis pode rodar em modo append. Toda vez que uma chave mudar, um arquivo somente-adição é atualizado no disco. Em alguns casos é aceitável perder 60 segundos de dados, em troca de performance, caso haja alguma falha de hardware ou software. Em alguns casos é inaceitável. O Redis lhe dá a opção. No capítulo 6 veremos uma terceira opção, que é delegar a persistência a um escravo.
 
 Quanto à memória, o Redis mantém todos os dados em memória. A implicação óbvia disto é o custo de rodar o Redis: a parte mais cara do hardware do servidor ainda é a RAM.
 
@@ -603,14 +603,111 @@ O `sort` pode ser lento em sets grandes. A boa notícia é que a saída de um `s
 
 Combinar a capacidade de guardar os resultados do `sort` com os comandos de expiração que já vimos antes resulta num ótimo combo.
 
-
 ### Neste Capítulo
 
 Este capítulo focou nos comandos que não são específicos às estruturas de dados. Como todo o resto, o uso deles depende da situação. É normal construir uma aplicação ou recurso que não usa expiração, publicação/assinatura nem ordenação; mas é bom saber que eles estão ali. Além disso, nós tocamos em apenas alguns comandos. Há mais, e, uma vez que você tenha digerido o material deste livro, vale a pena olhar a [lista completa](http://redis.io/commands).
 
 \clearpage
 
-## Capítulo 5 - Administração
+## Chapter 5 - Lua Scripting
+
+Redis 2.6 includes a built-in Lua interpreter which developers can leverage to write complex queries. It wouldn't be wrong of you to think of this capability much like you might view stored procedures available in most relational databases.
+
+Probably the most difficult aspect of mastering this feature is learning Lua. Thankfully, Lua is similar to most general puspose languages, is well documented, has an active community and is useful to know beyond Redis scripting. This chapter won't cover Lua in any detail; but the few examples we look at should hopefully serve as a simple introduction.
+
+### Why?
+
+Before looking at how to use Lua scripting, you might be wondering why you'd want to use it. Certainly many developers dislike traditional stored procedures, so is this any different? The short answer is no. Improperly used, Redis' Lua scripting can result in harder to test code, business logic tightly coupled with data access or even duplicated logic.
+
+Properly used however, it's a feature that can simplify code and improve performance. Both of these benefits are largely achieved by avoiding roundtrips for some distinct command. Code is made simpler because each invocation of a Lua script is run without interruption and thus provides a clean way to create your own atomic commands (essentially eliminating the need to use the cumbersome `watch` command). It can improve performance by removing the need to return intermediary results - the final output can be calculated within the script.
+
+The examples in the following sections will better illustrate these points.
+
+### Eval
+
+The `eval` command takes a Lua script (as a string), the keys we'll be operating against, and an optional set of arbitrary arguments. Let's look at a simple example (executed from Ruby, since running multi-line Redis commands from its command-line tool isn't fun):
+
+    script = <<-eos
+      local friend_names = redis.call('smembers', KEYS[1])
+      local friends = {}
+      for i = 1, #friend_names do
+        local friend_key = 'user:' .. friend_names[i]
+        local gender = redis.call('hget', friend_key, 'gender')
+        if gender == ARGV[1] then
+          table.insert(friends, redis.call('hget', friend_key, 'details'))
+        end
+      end
+      return friends
+    eos
+    Redis.new.eval(script, ['friends:leto'], ['m'])
+
+The above code gets the details for all of Leto's male friends. Notice that to call Redis commands within our code we use the `redis.call("command", ARG1, ARG2, ...)` method.
+
+If you are new to Lua, you should go over each line carefully. It might be useful to know that `{}` creates an empty `table` (which can act as either an array or a dictionary), `#TABLE` gets the number of elements in the TABLE, and `..` is used to concatenate strings.
+
+`eval` actually take 4 parameters. The second parameter should actually be the number of keys; however the Ruby driver automatically creates this for us. Why is this needed? Consider how the above looks like when executed from the CLI:
+
+    eval "....." "friends:leto" "m"
+    vs
+    eval "....." 1 "friends:leto" "m"
+
+In the first (incorrect) case, how does Redis know which of the paremeters are keys and which are simply arbitrary arguments? In the second case, there is no ambiguity.
+
+This brings up a second question: why must keys be explicitely listed? Every command in Redis knows, at execution time, which keys are going to needed. This will allow future tools, like Redis Cluster, to  distribute requests amongst multiple Redis servers. You might have spotted that our above example actually reads from keys dynamically (without having them passed to `eval`). An `hget` is issued on all of Leto's male friends. That's because the need to list keys ahead of time is more of a suggestion than a hard rule. The above code will run fine in a single-instance setup, or even with replication, but won't in the yet-released Redis Cluster.
+
+### Script Management
+
+Even though scripts executed via `eval` are cached by Redis, sending the body every time you want to execute something isn't ideal. Instead, you can register the script with Redis and execute it's key. To do this you use the `script load` command, which returns the SHA1 digest of the script:
+
+    redis = Redis.new
+    script_key = redis.script(:load, "THE_SCRIPT")
+
+Once we've loaded the script, we can `evalsha` to execute it:
+
+    redis.evalsha(script_key, ['friends:leto'], ['m'])
+
+`script kill`, `script flush` and `script exists` are the other commands that you can use to manage Lua scripts. They are used to kill a running script, removing all scripts from the internal cache and seeing if a script already exists within the cache.
+
+### Libraries
+
+Redis' Lua implmentation ships with a handful of useful libraries. While `table.lib`, `string.lib` and `math.lib` are quite useful, for me, `cjson.lib` is worth singling out. First, if you find yourself having to pass multiple arguments to a script, it might be cleaner to pass it as JSON:
+
+    redis.evalsha ".....", [KEY1], [JSON.fast_generate({gender: 'm', ghola: true})]
+
+Which you could then deserialize within the Lua script as:
+
+    local arguments = cjson.decode(ARGV[1])
+
+Of course, the JSON library can also be used to parse values stored in Redis itself. Our above example could potentially be rewritten as such:
+
+      local friend_names = redis.call('smembers', KEYS[1])
+      local friends = {}
+      for i = 1, #friend_names do
+        local friend_raw = redis.call('get', 'user:' .. friend_names[i])
+        local friend_parsed = cjson.decode(friend_raw)
+        if friend_parsed.gender == ARGV[1] then
+          table.insert(friends, friend_raw)
+        end
+      end
+      return friends
+
+Instead of getting the gender from specific hash, we could get it from the stored friend data itself. (This is a much slower solution, and I personally prefer the original, but it does show what's possible).
+
+### Atomic
+
+Since Redis is single-threaded, you don't have to worry about your Lua script being interrupted by another Redis command. One of the most obvious benefits of this is that keys with a TTL won't expire half-way through execution. If a key is present at the start of the script, it'll be present at any point thereafter - unless you delete it.
+
+### Administration
+
+The next chapter will talk about Redis administration and configuration in more detail. For now, simply know that the `lua-time-limit` defines how long a Lua script is allowed to execute before being terminated. The default for this is a generous 5 seconds. Consider lowering it.
+
+### In This Chapter
+
+This chapter introduced Redis' Lua scripting capabilities. Like anything, this feature can be abused. However, used prudently in order to implement your own custom and focused commands, it won't only simplify your code, but will likely improve performance. Lua scripting is like almost every other Redis feature/command: you make limited, if any, use of it at first and only to find yourself using it more and more each day.
+
+\clearpage
+
+## Capítulo 6 - Administração
 
 Nosso último capítulo é dedicado a alguns aspectos administrativos do Redis. De forma alguma isso é um guia abrangente de administração do Redis. No melhor dos casos, vamos responder algumas das dúvidas mais básicas que novos usuários do Redis provavelmente vão ter.
 
