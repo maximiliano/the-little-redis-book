@@ -237,7 +237,7 @@ Ver os hashes pela perspectiva de um objeto bem definido, como um usuário, é a
 Listas deixam você guardar e manipular um vetor de valores para uma determinada chave. Você pode adicionar valores à lista, pegar o primeiro ou o último valor e manipular valores em uma determinada posição. As listas mantêm a ordem inicial e tem operações baseadas em índices muito eficientes. Nós poderíamos ter uma lista `newusers` para acompanhar quais os usuários que se registraram por último em nosso site:
 
 	lpush newusers goku
-	ltrim newusers 0 50
+	ltrim newusers 0 49
 
 Primeiro nós adicionamos um novo usuário ao início da lista, depois cortamos a lista de forma que ela contenha apenas os 50 últimos usuários. Este é um padrão comum. `ltrim` é uma operação O(N), onde N é o número de valores que estamos removendo. Neste caso, quando reduzimos a lista sempre após uma inserção, o `ltrim` terá na verdade um desempenho O(1) (porque N sempre será igual a 1).
 
