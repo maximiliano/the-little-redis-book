@@ -108,7 +108,7 @@ Valores representam os dados efetivamente associados com uma chave. Podem ser qu
 
 Vamos sujar um pouco as mãos. Digite o seguinte comando:
 
-	set users:leto "{name: leto, planet: dune, likes: [spice]}"
+	set users:leto '{"name": "leto", "planet": "dune", "likes": ["spice"]}'
 
 Esta é a anatomia básica de um comando do Redis. Primeiro nós temos o comando de fato, neste caso o `set`. Depois temos seus parâmetros. O comando `set` recebe dois argumentos: a chave que estamos definindo e o valor que atribuímos a ela. Muitos, mas não todos, comandos recebem uma chave (e, quando recebem, muitas vezes é o primeiro argumento). Você consegue adivinhar como pegar este valor? Espero que você consiga (mas não se preocupe se não tinha certeza!):
 
@@ -180,18 +180,18 @@ Strings são a estrutura de dados mais básica do Redis. Quando você pensa num 
 
 Nós já vimos um caso de uso comum para strings: guardar instâncias de objetos por chave. Isto é algo do qual você pode fazer uso pesado:
 
-	set users:leto "{name: leto, planet: dune, likes: [spice]}"
+	set users:leto '{"name": "leto", "planet": "dune", "likes": ["spice"]}'
 
 O Redis também lhe permite fazer algumas operações adicionais. Por exemplo, `strlen <chave>` pode ser usado para obter o comprimento do valor de uma chave; `getrange <key> <start> <end>` retorna a sequência especificada de valores; `append <key> <value>` adiciona um valor ao final de outro (ou cria um, se já não existir). Vá em frente e tente-os. Isso é o que eu obtenho:
 
 	> strlen users:leto
-	(integer) 42
+	(integer) 50
 
-	> getrange users:leto 27 40
-	"likes: [spice]"
+	> getrange users:leto 31 48
+	"\"likes\": [\"spice\"]"
 
 	> append users:leto " OVER 9000!!"
-	(integer) 54
+	(integer) 62
 
 Você deve estar pensando: isso é ótimo, mas não faz sentido. Você não pode adicionar uma string ou obter um range a partir de um JSON e isso funcionar. Você está certo - a lição aqui é que alguns comandos, especialmente os que lidam com strings, só fazem sentido com alguns tipos específicos de dados.
 
@@ -321,8 +321,8 @@ Vale lembrar que a notação do Grande-O trata do pior caso. Quando dizemos que 
 
 Uma situação comum com a qual você vai se deparar é querer consultar o mesmo valor em chaves diferentes. Por exemplo, você pode querer obter um usuário pelo email (quando ele loga pela primeira vez) e também por id (depois que ele logou). Uma solução terrível é duplicar seu objeto usuário como duas strings:
 
-	set users:leto@dune.gov "{id: 9001, email: 'leto@dune.gov', ...}"
-	set users:9001 "{id: 9001, email: 'leto@dune.gov', ...}"
+	set users:leto@dune.gov '{"id": 9001, "email": "leto@dune.gov", ...}'
+	set users:9001 '{"id": 9001, "email": "leto@dune.gov", ...}'
 
 Isto é ruim porque é um pesadelo para gerenciar e porque ocupa o dobro da memória.
 
@@ -330,7 +330,7 @@ Seria legal se o Redis deixasse você apontar uma chave para outra, mas ele não
 
 Usando um hash, nós eliminamos a necessidade de duplicação:
 
-	set users:9001 "{id: 9001, email: leto@dune.gov, ...}"
+	set users:9001 '{"id": 9001, "email": "leto@dune.gov", ...}'
 	hset users:lookup:email leto@dune.gov 9001
 
 O que estamos fazendo é usar o campo como um pseudo-índice secundário e referenciando o objeto usuário único. Para obter um usuário por id, basta um `get` normal:
@@ -444,8 +444,8 @@ Como as pessoas usam-no? Digamos que você está escrevendo um sistema de acompa
 
 A melhor solução é usar um hash. De forma bem parecida a como usamos hashes para prover uma forma de expor índices secundários, também podemos usá-los para organizar nossos dados:
 
-	hset bugs:1233 1 "{id:1, account: 1233, subject: '...'}"
-	hset bugs:1233 2 "{id:2, account: 1233, subject: '...'}"
+	hset bugs:1233 1 '{"id":1, "account": 1233, "subject": "..."}'
+	hset bugs:1233 2 '{"id":2, "account": 1233, "subject": "..."}'
 
 Para obter todos os ids de bugs de uma conta, nós simplesmente rodamos `hkeys bugs:1233`. Para excluir um bug específico nós podemos fazer `hdel bugs:1233 2`, e para excluir uma conta nós podemos apagar a chave usando `del bugs:1233`.
 
@@ -560,19 +560,19 @@ Apesar de você poder ter milhões de chaves dentro do Redis, eu acho que o mét
 
 	hset bug:12339 severity 3
 	hset bug:12339 priority 1
-	hset bug:12339 details "{id: 12339, ....}"
+	hset bug:12339 details '{"id": 12339, ....}'
 
 	hset bug:1382 severity 2
 	hset bug:1382 priority 2
-	hset bug:1382 details "{id: 1382, ....}"
+	hset bug:1382 details '{"id": 1382, ....}'
 
 	hset bug:338 severity 5
 	hset bug:338 priority 3
-	hset bug:338 details "{id: 338, ....}"
+	hset bug:338 details '{"id": 338, ....}'
 
 	hset bug:9338 severity 4
 	hset bug:9338 priority 2
-	hset bug:9338 details "{id: 9338, ....}"
+	hset bug:9338 details '{"id": 9338, ....}'
 
 Assim, não apenas fica tudo mais organizado – e nós podemos ordenar por gravidade ou prioridade – como também podemos dizer qual campo o `sort` deve retornar:
 
