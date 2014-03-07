@@ -368,8 +368,8 @@ Nós já mencionamos que consultas frequentes ao servidor é um padrão comum no
 
 Primeiro, vários comandos aceitam um ou mais parâmetros, ou têm um comando irmão que aceita vários parâmetros. Nós vimos o `mget` mais cedo, que recebe múltiplas chaves e retorna os valores:
 
-	keys = redis.lrange('newusers', 0, 10)
-	redis.mget(*keys.map {|u| "users:#{u}"})
+	ids = redis.lrange('newusers', 0, 9)
+	redis.mget(*ids.map {|u| "users:#{u}"})
 
 Ou o comando `sadd`, que adiciona um ou mais membros a um conjunto:
 
