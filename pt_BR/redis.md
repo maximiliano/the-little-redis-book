@@ -1,10 +1,3 @@
-\thispagestyle{empty}
-\changepage{}{}{}{-0.5cm}{}{2cm}{}{}{}
-![The Little Redis Book, By Karl Seguin](title.png)\
-
-\clearpage
-\changepage{}{}{}{0.5cm}{}{-2cm}{}{}{}
-
 ## Sobre Este Livro
 
 ### Licença
@@ -33,8 +26,6 @@ Um obrigado especial para [Perry Neal](https://twitter.com/perryneal) por ter me
 
 O código mais recente deste livro está disponível em:
 <http://github.com/karlseguin/the-little-redis-book>
-
-\clearpage
 
 ## Introdução
 
@@ -86,8 +77,6 @@ Se você está tendo problemas com o procedimento anterior, eu sugiro que você 
 ## Drivers do Redis
 
 Como você vai aprender em breve, a API do Redis é melhor definida como um conjuto explícito de funções. Ela tem um aspecto simples e processual. Isto significa que tanto usando a ferramenta da linha de comando como um driver para sua linguagem favorita, vai ser tudo muito parecido. Portanto, você não deve ter problemas problemas em acompanhar os passos seguintes se você preferir usar uma linguagem de programação. Se preferir, siga para a [página de clientes] e baixe o driver apropriado.
-
-\clearpage
 
 ## Capítulo 1 - O Básico
 
@@ -174,8 +163,6 @@ Os pontos importantes deste capítulo são:
 * O Redis expõe (e é implementado como) cinco estruturas de dados especializadas
 
 * Combinados, os pontos acima deixam o Redis rápido e fácil de usar, mas não adequado para todos os cenários
-
-\clearpage
 
 ## Capítulo 2 - As Estruturas de Dados
 
@@ -304,8 +291,6 @@ Nós usamos `zrevrank` em vez de `zrank` pois a ordenação padrão do Redis é 
 ### Neste Capítulo
 
 Esta é uma visão geral das cinco estruturas de dados do Redis. Uma das coisas mais legais do Redis é que na maioria das vezes você pode fazer mais do que você percebe a princípio. Provavelmente, há formas de usar strings e conjuntos ordenados que ninguém pensou ainda. Contanto que você entenda o caso de uso normal, você vai achar o Redis ideal para todos os tipos de problemas. Além disso, não é porque o Redis expõe cinco estruturas de dados e vários métodos que você precisa usar todos eles. É comum implementar um recurso usando apenas uns poucos comandos.
-
-\clearpage
 
 ## Capítulo 3 - Explorando as Estruturas de Dados
 
@@ -469,8 +454,6 @@ Para obter todos os ids de bugs de uma conta, nós simplesmente rodamos `hkeys b
 
 Esperamos que este capítulo, junto com o anterior, tenha lhe dado uma boa visão sobre como usar o Redis para implementar recursos reais. Há vários outros padrões que você pode usar para construir todo tipo de coisa, mas o segredo é entender as estruturas de dados fundamentais e como elas podem ser usadas para atingir coisas além da sua perspectiva inicial.
 
-\clearpage
-
 
 ## Capítulo 4 - Além das Estruturas de Dados
 
@@ -606,8 +589,6 @@ Combinar a capacidade de guardar os resultados do `sort` com os comandos de expi
 ### Neste Capítulo
 
 Este capítulo focou nos comandos que não são específicos às estruturas de dados. Como todo o resto, o uso deles depende da situação. É normal construir uma aplicação ou recurso que não usa expiração, publicação/assinatura nem ordenação; mas é bom saber que eles estão ali. Além disso, nós tocamos em apenas alguns comandos. Há mais, e, uma vez que você tenha digerido o material deste livro, vale a pena olhar a [lista completa](http://redis.io/commands).
-
-\clearpage
 
 # Chapter 5 - Lua Scripting
 
@@ -765,8 +746,6 @@ Alta disponibilidade e escalabilidade são algo que pode ser atingido hoje, cont
 ### Neste Capítulo
 
 Dado o número de projetos e sites que já usam Redis, não resta dúvida que o Redis está pronto para produção, e que já tem estado assim por um bom tempo. Entretanto, algumas das ferramentas - especialmente as de segurança e disponibilidade - ainda são muito "verdes". O Cluster Redis, que esperamos ver em breve, deve ajudar a resolver alguns dos desafios de administração atuais.
-
-\clearpage
 
 ## Conclusão
 
