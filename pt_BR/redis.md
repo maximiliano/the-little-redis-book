@@ -620,24 +620,23 @@ Além de `scan`, também foram adicionados os comandos `hscan`, `sscan` e `zscan
 
 Este capítulo focou nos comandos que não são específicos às estruturas de dados. Como todo o resto, o uso deles depende da situação. É normal construir uma aplicação ou recurso que não usa expiração, publicação/assinatura nem ordenação; mas é bom saber que eles estão ali. Além disso, nós tocamos em apenas alguns comandos. Há mais, e, uma vez que você tenha digerido o material deste livro, vale a pena olhar a [lista completa](http://redis.io/commands).
 
-TODO: Traduzir esse capítulo
 # Chapter 5 - Lua Scripting
 
-Redis 2.6 includes a built-in Lua interpreter which developers can leverage to write more advanced queries to be executed within Redis. It wouldn't be wrong of you to think of this capability much like you might view stored procedures available in most relational databases.
+Redis 2.6 inclui um interpretador Lua embutido que desenvolvedores podem usar para escrever queries mais avançandas para serem executados no Redis. Não seria um equivoco pensar nessa capacidade como um stored procedure presente na maioria dos banco de dados relacionais.
 
-The most difficult aspect of mastering this feature is learning Lua. Thankfully, Lua is similar to most general purpose languages, is well documented, has an active community and is useful to know beyond Redis scripting. This chapter won't cover Lua in any detail; but the few examples we look at should hopefully serve as a simple introduction.
+O aspécto mais dificil dessa funcionalidade é aprender Lua. Fortunadamento, Lua é parecida com a maioria das linguagens de propósitos gerais, é bem documentada, tem um comunidade ativa e é útil para outras coisas além de fazer scripts para Redis. Este capítulo não vai falar sobre Lua em detalhe; mas os poucos exemplos que vamos ver devem servir como uma simples introdução.
 
-# Why?
+## Porque?
 
-Before looking at how to use Lua scripting, you might be wondering why you'd want to use it. Many developers dislike traditional stored procedures, is this any different? The short answer is no. Improperly used, Redis' Lua scripting can result in harder to test code, business logic tightly coupled with data access or even duplicated logic.
+Antes de ver como usar scripts em Lua, você deve estar imaginando porque você iria querer fazer isso. Muitos desenvolvedores não gostam dos stored procedures tradicionais, existem alguma diferença em relação a eles? A resposta curta é não. Usado de maneira errada, scripts em Lua podem resultar em código mais difícil de testar, lógica de negócios fortemente acoplada a acesso de dados ou até lógica duplicada.
 
-Properly used however, it's a feature that can simplify code and improve performance. Both of these benefits are largely achieved by grouping multiple commands, along with some simple logic, into a custom-build cohesive function. Code is made simpler because each invocation of a Lua script is run without interruption and thus provides a clean way to create your own atomic commands (essentially eliminating the need to use the cumbersome `watch` command). It can improve performance by removing the need to return intermediary results - the final output can be calculated within the script.
+Se usada corretamente, entretanto, é uma funcionalidade que pode simplificar o código e melhorar performance. Ambos benefícios são alcançados ao agrupar múltiplos comandos, junto com uma lógica simples, em uma função coesa. O código fica mais simples por que cada chamada de um script Lua é executada sem interrupção e portanto fornece uma maneira clara de criar seus próprios comandos atômicos (essencialmente eliminando a necessidade do incomodo `watch`). Isso pode melhorar a performance ao remover a necessidade de retornar resultados intermediários - a saída final pode ser calculada dentro do script.
 
-The examples in the following sections will better illustrate these points.
+Os exemplos a seguir vão ilustrar melhor esses pontos.
 
-# Eval
+## Eval
 
-The `eval` command takes a Lua script (as a string), the keys we'll be operating against, and an optional set of arbitrary arguments. Let's look at a simple example (executed from Ruby, since running multi-line Redis commands from its command-line tool isn't fun):
+O comando `eval` recebe um script Lua (como uma string), as chaves que usaremos, e um conjunto opcional de arguementos arbitrários. Vamos ver um exemplo simples (executado por Ruby, já que executar comandos Redis multi-linhas a partir da ferramenta linha de comando não é bacana):
 
     script = <<-eos
       local friend_names = redis.call('smembers', KEYS[1])
@@ -653,44 +652,44 @@ The `eval` command takes a Lua script (as a string), the keys we'll be operating
     eos
     Redis.new.eval(script, ['friends:leto'], ['m'])
 
-The above code gets the details for all of Leto's male friends. Notice that to call Redis commands within our script we use the `redis.call("command", ARG1, ARG2, ...)` method.
+O código acima obtem os detalhes de todos os amigos de Leto do sexo masculino. Perceba que para executar comandos Redis dentro do nosso script, nós usamos o método `redis.call("command", ARG1, ARG2, ...)`.
 
-If you are new to Lua, you should go over each line carefully. It might be useful to know that `{}` creates an empty `table` (which can act as either an array or a dictionary), `#TABLE` gets the number of elements in the TABLE, and `..` is used to concatenate strings.
+Se você é novo em Lua, você devia examinar cada linha com cuidado. Pode ser útil saber que `{}` cria uma `table` vazia (que pode agir como uma lista ou dicionário), `#TABLE` pega o número de elementos em TABLE, e `..` é usado para concatenar strings.
 
-`eval` actually take 4 parameters. The second parameter should actually be the number of keys; however the Ruby driver automatically creates this for us. Why is this needed? Consider how the above looks like when executed from the CLI:
+`eval` na verdade recebe 4 parametros. O segundo parâmetro deve na verdade ser o número de chaves; entretanto o driver Ruby automaticamente cria isso para nós. Porque ele é necessário? Considere que o código acima parece quando executado pela CLI:
 
     eval "....." "friends:leto" "m"
     vs
     eval "....." 1 "friends:leto" "m"
 
-In the first (incorrect) case, how does Redis know which of the parameters are keys and which are simply arbitrary arguments? In the second case, there is no ambiguity.
+No primeiro (incorreto) caso, como o Redis sabe qual dos parâmetros são chaves e quais são argumentos arbitrários? No segundo caso, não há ambiguidade.
 
-This brings up a second question: why must keys be explicitly listed? Every command in Redis knows, at execution time, which keys are going to needed. This will allow future tools, like Redis Cluster, to  distribute requests amongst multiple Redis servers. You might have spotted that our above example actually reads from keys dynamically (without having them passed to `eval`). An `hget` is issued on all of Leto's male friends. That's because the need to list keys ahead of time is more of a suggestion than a hard rule. The above code will run fine in a single-instance setup, or even with replication, but won't in the yet-released Redis Cluster.
+Isso nos leva a uma segunda questão: porque as chaves devem ser explicitamente listadas? Cada comando no Redis sabe, em tempo de execução, quais chaves vão ser necessárias. Isso permite que ferramentas futuras, como o Redis Cluster, distribuir requests entre múltiplos servidores Redis. Você pode ter percebido que nosso exemplo acima na verdade lê chaves dinamicamente (sem ter que passar elas para `eval`). Um `hget` é executado em todos os amigos de Leto do sexo masculino. Isso porque a necessidade de listar a chaves previamente é mais uma sugestão do que uma regra imposta. O código acima vai executara normalmente em uma configuração de uma única-instancia, ou mesmo com replicação, mas não vai funcionar no ainda não lançado Redis Cluster.
 
-# Script Management
+## Gerenciamento de Scripts
 
-Even though scripts executed via `eval` are cached by Redis, sending the body every time you want to execute something isn't ideal. Instead, you can register the script with Redis and execute it's key. To do this you use the `script load` command, which returns the SHA1 digest of the script:
+Mesmo que os scripts executados via `eval` sejam armazenados em cache pelo Redis, enviar o corpo cada vez que você quer executar algo não é o ideal. Ao invés, você pode registrar o script no Redis e executar sua chave. Para fazer isso você dever usar o comando `script load`, que retorna o SHA1 digest do script:
 
     redis = Redis.new
     script_key = redis.script(:load, "THE_SCRIPT")
 
-Once we've loaded the script, we can use `evalsha` to execute it:
+Uma vez que nós carregamos o script, nós podemos usar `evalsha` para executa-lo:
 
     redis.evalsha(script_key, ['friends:leto'], ['m'])
 
-`script kill`, `script flush` and `script exists` are the other commands that you can use to manage Lua scripts. They are used to kill a running script, removing all scripts from the internal cache and seeing if a script already exists within the cache.
+Outros comandos que você pode usar para gerenciar seus scripts Lua são `script kill`, `script flush` e `script exists`. Eles são usados para matar um script em execução, remover todos os scripts do cache interno e verificar se um script já existe no cache.
 
-# Libraries
+## Bibliotecas
 
-Redis' Lua implementation ships with a handful of useful libraries. While `table.lib`, `string.lib` and `math.lib` are quite useful, for me, `cjson.lib` is worth singling out. First, if you find yourself having to pass multiple arguments to a script, it might be cleaner to pass it as JSON:
+A implementação de Lua no Redis vem com um punhado de bibliotecas úteis. Enquando `table.lib`, `string.lib` e `math.lib` são bem úteis, para mim, vale a pena destacar a `cjson.lib`. Primeiramente, se você tem que passar múltiplos argumentos para um script, pode ser mais claro passa-los como JSON:
 
     redis.evalsha ".....", [KEY1], [JSON.fast_generate({gender: 'm', ghola: true})]
 
-Which you could then deserialize within the Lua script as:
+Que pode ser desserializados dentro do script Lua:
 
     local arguments = cjson.decode(ARGV[1])
 
-Of course, the JSON library can also be used to parse values stored in Redis itself. Our above example could potentially be rewritten as such:
+Claro, a biblioteca JSON pode ser usadas para "parsear" valores armazenados no próprios Redis. Nosso exemplo acima poderia ser escrito como:
 
       local friend_names = redis.call('smembers', KEYS[1])
       local friends = {}
@@ -703,19 +702,19 @@ Of course, the JSON library can also be used to parse values stored in Redis its
       end
       return friends
 
-Instead of getting the gender from specific hash field, we could get it from the stored friend data itself. (This is a much slower solution, and I personally prefer the original, but it does show what's possible).
+Ao invés de pegar o gênero de um campo específico de um hash, nós podemos pega-lo dos próprios dados do amigo. (Esta é uma solução mais lenta, e eu pessoalmente prefiro a original, mas isso mostra que é possível).
 
-# Atomic
+## Atomico
 
-Since Redis is single-threaded, you don't have to worry about your Lua script being interrupted by another Redis command. One of the most obvious benefits of this is that keys with a TTL won't expire half-way through execution. If a key is present at the start of the script, it'll be present at any point thereafter - unless you delete it.
+Já que Redis é single-threaded, você não deve se preocupar com o seu script Lua ser interrompido por outro comando Redis. One dos benefícios mais óbvios disso é que chaves com um TTL não vai expirar na metade da execução. Se uma chave está presente no início do script, ela vai estar presente em qualquer ponto do script - a não ser que você a remova.
 
-# Administration
+## Administração
 
-The next chapter will talk about Redis administration and configuration in more detail. For now, simply know that the `lua-time-limit` defines how long a Lua script is allowed to execute before being terminated. The default is generous 5 seconds. Consider lowering it.
+O próximo capítulo vai falar sobre a administração e configuração do Redis em mais detalhes. Por enquanto, basta saber que o `lua-time-limit` define por quanto tempo um script Lua é permitido executar antes de ser finalizado. O padrão são generoso 5 segundos. Considere abaixar esse limite.
 
-# In This Chapter
+## Neste Capítulo
 
-This chapter introduced Redis' Lua scripting capabilities. Like anything, this feature can be abused. However, used prudently in order to implement your own custom and focused commands, it won't only simplify your code, but will likely improve performance. Lua scripting is like almost every other Redis feature/command: you make limited, if any, use of it at first only to find yourself using it more and more every day.
+Este capítulo apresentou a funcionalidade de executar scripts Lua no Redis. Como qualquer coisa, essa funcionalidade pode ser abusada. Entretanto, se usada com prudência para implementar seus próprios e objetivos comandos, ela não vai somente simplificar seu código, como também provavelmente melhorar sua performance. Scripts em Lua são como quase qualquer outro comando/funcionalidade do Redis: você faz um uso limitado dele inicialmente somente para perceber que está usando mais e mais a cada dia.
 
 # Capítulo 6 - Administração
 
