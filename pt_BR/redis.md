@@ -586,20 +586,19 @@ O `sort` pode ser lento em sets grandes. A boa notícia é que a saída de um `s
 
 Combinar a capacidade de guardar os resultados do `sort` com os comandos de expiração que já vimos antes resulta num ótimo combo.
 
-TODO: Traduzir essa parte
 ## Scan
 
-In the previous chapter, we saw how the `keys` command, while useful, shouldn't be used in production. Redis 2.8 introduces the `scan` command which is production-safe. Although `scan` fulfills a similar purpose to `keys` there are a number of important difference. To be honest, most of the *differences* will seem like *idiosyncrasies*, but this is the cost of having a usable command.
+No capítulo anterior, vimos como o comando `keys`, apesar de útil, não devia ser usado em produção. Redis 2.8 introduziu um novo comando, o `scan`, que é seguro de usar em produção. Apesar de `scan` ter uma função semelhante a `keys`, existem algumas diferenças. Para ser franco, a maioria das *diferenças* vão parecer idiossincrasias, mas este é o preço de se ter um comando útil.
 
-First amongst these differences is that a single call to `scan` doesn't necessarily return all matching results. Nothing strange about paged results; however, `scan` returns a variable number of results which cannot be precisely controlled. You can provide a `count` hint, which defaults to 10, but it's entirely possible to get more or less than the specified `count`.
+A primeira diferença é que uma única chamada a `scan` não trás necessáriamente todos os resultados. Não há nada estranho em resultados paginados; entretanto, `scan` retorna uma número variabel de resultados que não podem ser controlados precisamente. Você pode passar um `count` (sugestão), que é por padrão 10, mas é possivel receber mais ou menos do que o especificado em `count`.
 
-Rather than implementing paging through a `limit` and `offset`, `scan` uses a `cursor`. The first time you call `scan` you supply `0` as the cursor. Below we see an initial call to `scan` with an pattern match (optional) and a count hint (optional):
+Ao invés de implementar paginação através de `limit` e `offset`, `scan` usa `cursor`. A primeira vez que você chama `scan` você passa `0` como o cursor. Vemos abaixo uma chamada inicial a `scan` com um padrão (opcional) e um contador (opcional):
 
     scan 0 match bugs:* count 20
 
-As part of its reply, `scan` returns the next cursor to use. Alternatively, scan returns `0` to signify the end of results. Note that the next cursor value doesn't correspond to the result number or anything else which clients might consider useful.
+Como parte da resposta, `scan` retorna o próximo cursor a ser usado. Alternativamente, scan retorna `0` para dizer que chegou ao fim dos resultados. Perceba que o próximo valor do cursor não corresponde ao número de resultado ou nada que o cliente possa considerar útil.
 
-A typical flow might look like this:
+Um uso comum pode ser assim:
 
     scan 0 match bugs:* count 2
     > 1) "3"
@@ -609,13 +608,13 @@ A typical flow might look like this:
     > 2) 1) "bugs:124"
     >    2) "bugs:123"
 
-Our first call returned a next cursor (3) and one result. Our subsequent call, using the next cursor, returned the end cursor (0) and the final two results. The above is a *typical* flow. Since the `count` is merely a hint, it's possible for `scan` to return a next `cursor` (not 0) with no actual results. In other words, an empty result set doesn't signify that no additional results exist. Only a 0 cursor means that there are no additional results.
+Nossa primeira chamada retorna o próximo cursor (3) e um resultado. Nossa chamada seguinte, usando o próximo cursor, retorna o cursor (0) e os últimos dois resultados. O que está acima é um uso *comum*. Já que `count` é só uma sugestão, é possível que `scan` retorna o próximo `cursor` (não 0) com nenhum resultado. Em outras palavras, um conjunto vazio de resultados não significa que não existem mais resultados. Somente um cursor 0 significa que não existem mais resultados.
 
-On the positive side, `scan` is completely stateless from Redis' point of view. So there's no need to close a cursor and there's no harm in not fully reading a result. If you want to, you can stop iterating through results, even if Redis returned a valid next cursor.
+Vendo por um lado bom, `scan` não tem estado pelo ponto de vista do Redis. Então não há necessidade de encerrar um cursor e não há mal em não ler um resultado completamente. Se você quiser, você pode parar de iterar os resultados, mesmo se o Redis retornou um cursor válido.
 
-There are two other things to keep in mind. First, `scan` can return the same key multiple times. It's up to you to deal with this (likely by keeping a set of already seen values). Secondly, `scan` only guarantees that values which were present during the entire duration of iteration will be returned. If values get added or removed while you're iterating, they may or may not be returned. Again, this comes from `scan`'s statelessness; it doesn't take a snapshot of the existing values (like you'd see with many databases which provide strong consistency guarantees), but rather iterates over the same memory space which may or may not get modified.
+Existem mais duas coisas para se manter em mente. Primeira, `scan` pode retornar várias vezes a mesma chave. Depende de você lidar com isso (geralmente mantendo um conjunto de valores já vistos). Segunda, `scan` somente garante que os valores estavam presentes durante a duração da iteração vão ser retornados. Se valores forem adicionados ou removidos enquantos você está iterando, eles podem ou não serem retornados. Novamente, isso ocorre por causa da falta de estado do `scan`; ele não tira um snapshoot dos valores existentes (como você pode observar em bancos de dados que oferecem fortes garantias de consistência), mas sim itera sobre o mesmo espaço de memória que pode ou não ser modificado.
 
-In addition to `scan`, `hscan`, `sscan` and `zscan` commands were also added. These let you iterate through hashes, sets and sorted sets. Why are these needed? Well, just like `keys` blocks all other callers, so does the hash command `hgetall` and the set command `smembers`. If you want to iterate over a very large hash or set, you might consider making use of these commands. `zscan` might seem less useful since paging through a sorted set via `zrangebyscore` or `zrangebyrank` is already possible. However, if you want to fully iterate through a large sorted set, `zscan` isn't without value.
+Além de `scan`, também foram adicionados os comandos `hscan`, `sscan` e `zscan`. Esses comandos permitem que você itere através de hashes, conjuntos e conjuntos ordenados. Porque precisamos deles? Bem, por que como `keys` bloqueia todas as outras chamadas, também o faz o comando `hgetall` e o comando `smembers`. Se você quer iterar sobre hash ou conjunto muito grande, você deve considerar usar esses novos comandos. `zscan` pode parecer menos útil já que paginar sobre um conjunto ordenado através de `zrangebyscore` ou `zrangebyrank` já é possível. Entretanto, se você quer iterar completamente através de um grande conjunto ordenado, `zscan` mostra seu valor.
 
 ## Neste Capítulo
 
